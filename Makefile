@@ -3,7 +3,6 @@ CXX=g++
 WIRINGPI=dependencies/includes/WiringPi/wiringPi/
 SHA256=dependencies/includes/sha/
 FLAGS=-Ldependencies/libs/ -lsha256 -lpthread -lwiringPi -Idependencies/includes/ -I$(WIRINGPI)
-CROSSCOMPILE=NO
 
 CURRENT_DIR=$(shell pwd)
 OUTPUT=build
