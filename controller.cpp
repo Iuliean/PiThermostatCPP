@@ -95,7 +95,7 @@ Parameters Controller::getParameters()
 	this->parametersMutex.lock();
 	
 	out.temp		= this->temp;
-	out.threshold	= this->threshold;
+	out.threshold		= this->threshold;
 	out.range		= this->range;
 	out.state		= this->getState();
 	
@@ -113,7 +113,7 @@ void Controller::setParameters(float newThreshold, float newRange)
 {
 	this->parametersMutex.lock();
 	
-	this->range		= newRange;
+	this->range	= newRange;
 	this->threshold = newThreshold;
 
 	this->parametersMutex.unlock();
@@ -144,7 +144,7 @@ void Controller::toDisk()
 	LOG_CONTROLLER_INFO << "Writing parameters to disk >> parameters.json";
 	nlohmann::json j;
 
-	j["range"]			= double(int(this->range * 10))/10;
+	j["range"]		= double(int(this->range * 10))/10;
 	j["threshold"]		= double(int(this->threshold * 10))/10;
 
 	this->parametersFile.write(j);
