@@ -9,7 +9,8 @@
 
 # Building
 
-A simple ` make ` should do the trick. The output it's in `build/`
+You need to install `boost` first with `sudo apt install build-essential libboost-all-dev`
+after that a simple ` make ` should do the trick. The output it's in `build/`
 
 # Build Folder Structure
 

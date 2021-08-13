@@ -8,8 +8,8 @@
     "controller":{
         "tempReads":1,
         "readDelay":0,
-        "temp_pin":22,
-        "relay_pin":3,
+        "tempPin":22,
+        "relayPin":3,
         "display":{
             "digits":[12,16,20,21],
             "A":26,

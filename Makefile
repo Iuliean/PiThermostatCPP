@@ -2,7 +2,7 @@ CXX=g++
 
 WIRINGPI=dependencies/includes/WiringPi/wiringPi/
 SHA256=dependencies/includes/sha/
-FLAGS=-Ldependencies/libs/ -lsha256 -lpthread -lwiringPi -Idependencies/includes/ -I$(WIRINGPI)
+FLAGS=-Ldependencies/libs/ -lsha256 -lpthread -lwiringPi -lboost_system -Idependencies/includes/ -I$(WIRINGPI)
 
 CURRENT_DIR=$(shell pwd)
 OUTPUT=build
