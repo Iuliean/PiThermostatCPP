@@ -1,0 +1,7 @@
+*.bat
+*.sh
+*.o
+*.a
+*.so
+site
+.vscode

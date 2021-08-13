@@ -1,0 +1,26 @@
+{
+    "site":{
+        "port": 18080,
+        "password": "parola",
+        "cookieLifetime": 20
+    },
+
+    "controller":{
+        "tempReads":1,
+        "readDelay":0,
+        "temp_pin":22,
+        "relay_pin":3,
+        "display":{
+            "digits":[12,16,20,21],
+            "A":26,
+            "B":13,
+            "C":9,
+            "D":5,
+            "E":6,
+            "F":19,
+            "G":10,
+            "DP":11
+        }
+    }
+   
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/dashboard.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    </head>
+    <body>
+        <div class="temp-box">
+            <h1 id="temperature" style="padding-top: 5px;">{{temp}}&#8451</h1>
+            <h4 id="state">{{state}}</h4>
+        </div>
+        <h4 id="success-tag">Success</h4>
+        <form id="settings-form">
+            <input name="threshold" type="number" step="0.1"id="threshold" placeholder="{{threshold}}">
+            <input name="range" type="number" step="0.1" id="range" placeholder="{{range}}"><br>
+            <input type="button" value="Submit" id="submit-button" onclick="sendData()">
+        </form>
+
+        <script src="/static/scripts/refresh.js"></script>
+        <script src="/static/scripts/sendData.js"></script>
+    </body>
+</html>

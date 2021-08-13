@@ -1,0 +1,42 @@
+body{
+  background-color: grey;
+}
+
+.temp-box{
+  background-color: blue;
+  text-align: center;
+}
+
+.temp-box h4{
+  text-align: right;
+  margin: 0px;
+  border: 0px;
+  padding-right: 4rem;
+}
+
+#success-tag{
+  display: none;
+  color:green;
+  text-align: center;
+  border: 0px;
+  margin: 0px;
+  padding-top: 10px;
+
+}
+
+form{
+  padding-top: 2rem;
+  text-align: center;
+}
+
+input{
+  margin-top: 0.6rem;
+}
+
+#submit-button{
+  margin-top: 1rem;
+  border: 0px;
+  background-color: #000bd9;
+  color: white;
+  border-radius: 5px;
+}

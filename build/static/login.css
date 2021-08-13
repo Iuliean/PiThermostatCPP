@@ -1,0 +1,23 @@
+body{
+    background-color: grey;
+}
+
+.container{
+    padding-top: 4rem;
+    text-align: center;
+}
+
+#password-box{
+    text-align: center;
+    border-radius: 5px;
+    border: 0;
+    margin: 0;
+}
+
+#submit-button{
+    background-color: #000bd9;
+    color: white;
+    border-radius: 5px;
+    border: 0px;
+    margin: 0px;
+}
