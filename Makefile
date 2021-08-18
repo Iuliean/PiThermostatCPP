@@ -11,6 +11,14 @@ OJBFILES=$(FILES:.cpp=.o)
 
 all: setup sha256 wiringPi main
 
+install: all
+	cp build/RPIThermostat.service /etc/systemd/system/
+	chmod 640 /etc/systemd/system/RPIThermostat.service
+
+	mv build/libwiringPi.so /usr/lib/
+
+	cp -r build /opt/RPIThermostat
+
 setup:
 	mkdir -p $(OUTPUT)
 

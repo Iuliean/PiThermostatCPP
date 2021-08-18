@@ -13,6 +13,7 @@ private:
     crow::App<crow::CookieParser> app;
 
     int port;
+    unsigned int cleanInterval;
     std::string password;
 
 public:
@@ -30,5 +31,6 @@ private:
     crow::response getParams(const crow::CookieParser::context& cookies);
     crow::response setParams(const crow::request& req, const crow::CookieParser::context& cookies);
     
+    crow::response shutdown(const crow::request& req, const crow::CookieParser::context& cookies);
     
 };

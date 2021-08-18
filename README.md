@@ -12,6 +12,8 @@
 You need to install `boost` first with `sudo apt install build-essential libboost-all-dev`
 after that a simple ` make ` should do the trick. The output it's in `build/`
 
+If you wish to make it more permanent use `sudo make install` this will move the `build` folder into `/opt/RPIThermostat` and it will also move `libwiringPi.so` and `RPIThermostat.service` to `/usr/lib` and `/etc/systemd/system/`. Then you can use `systemctl` to start/stop/enable/disable the service
+
 # Build Folder Structure
 
 ```
@@ -38,11 +40,12 @@ There are two files:
 This file contains all the parameters required to start the app. Default:
 
 ```json
-    {
+{
     "site":{
         "port": 18080,
         "password": "password",
-        "cookieLifetime": 20
+        "cookieLifetime": 20,
+        "cleanInterval": 3600
     },
 
     "controller":{
@@ -50,6 +53,7 @@ This file contains all the parameters required to start the app. Default:
         "readDelay":0,
         "tempPin":22,
         "relayPin":3,
+        "saveInterval": 600,
         "display":{
             "digits":[12,16,20,21],
             "A":26,
@@ -72,11 +76,13 @@ This file contains all the parameters required to start the app. Default:
     - `port` is the port on which the webserver runs
     - `password` password for site access (this gets hashed)
     - `cookieLifetime` this determines the lifetime of the authentification tokens both server and client side
+    - `cleanInterval` the amount of time at which the program cleans expired cookies from memory
 - `controller` settings related to the phyisical part of the thermostat
     - `tempReads` determines how many temperature readings the program makes and averages them
     - `readDelay` the delay between temperature readings
     - `tempPin` pin on which the temperature sensor is installed on
     - `realyPin` pin on which the relay is installed on
+    - `saveInterval` the amount of time at which the program saves the internal `threshold` and `range` to disk
     - `display`
         + `digits` pins responsible for each digit segment in the display in order
         + `A,B,C,D,E,F,G,DP` pins responsible for each segment of the 7 segment display
@@ -106,5 +112,10 @@ The main endpoints of the site are:
 
 - `/getParams` if a authentification cookie is present it returns a json object containing the current temperature, state, threshold and range
 - `/setParams` recieves `POST` requests with json objects that contain the new threshold and range and it sets those parameters to the recieved ones
+- `/shutdown` issues shutdown command to the system `sudo system -P now`
 
 By default in CrowCpp every file in `build/static/` can be accessed through `/static/file`
+
+# Site aspect
+
+You can replace the scripts, html and css files with your own and make it look good 

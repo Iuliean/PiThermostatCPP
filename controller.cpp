@@ -30,8 +30,9 @@ Controller::Controller()
 		this->temp_pin 		= j["controller"]["tempPin"];
 		this->tempReads		= j["controller"]["tempReads"];
 		this->readDelay		= j["controller"]["readDelay"];
+		this->saveInterval	= j["controller"]["saveInterval"];
 
-		if(this->tempReads == 0)
+		if(this->tempReads <= 0)
 			throw 100;
 		if(this->readDelay < 0)
 			throw 101;
@@ -41,7 +42,7 @@ Controller::Controller()
 		switch(error)
 		{
 			case 100:	
-				LOG_CONTROLLER_WARNING << "Can't have tempReads = 0. Will result in division by 0.Setting default 1.";
+				LOG_CONTROLLER_WARNING << "Can't have tempReads <= 0. Will result in division by 0 or invalid temperatures. Setting default 1.";
 				this->tempReads	= 1;
 				break;
 			
@@ -76,7 +77,7 @@ void Controller::run()
 		else if (params.temp < params.threshold - params.range)
 			this->rel.on();
 
-		if(std::chrono::duration<float>(std::chrono::high_resolution_clock::now()- lastSave).count() > 600)
+		if(std::chrono::duration<float>(std::chrono::high_resolution_clock::now()- lastSave).count() > saveInterval)
 		{
 			lastSave = std::chrono::high_resolution_clock::now();
 			this->toDisk();
@@ -95,7 +96,7 @@ Parameters Controller::getParameters()
 	this->parametersMutex.lock();
 	
 	out.temp		= this->temp;
-	out.threshold		= this->threshold;
+	out.threshold	= this->threshold;
 	out.range		= this->range;
 	out.state		= this->getState();
 	
@@ -113,7 +114,7 @@ void Controller::setParameters(float newThreshold, float newRange)
 {
 	this->parametersMutex.lock();
 	
-	this->range	= newRange;
+	this->range		= newRange;
 	this->threshold = newThreshold;
 
 	this->parametersMutex.unlock();
@@ -144,7 +145,7 @@ void Controller::toDisk()
 	LOG_CONTROLLER_INFO << "Writing parameters to disk >> parameters.json";
 	nlohmann::json j;
 
-	j["range"]		= double(int(this->range * 10))/10;
+	j["range"]			= double(int(this->range * 10))/10;
 	j["threshold"]		= double(int(this->threshold * 10))/10;
 
 	this->parametersFile.write(j);

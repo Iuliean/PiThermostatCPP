@@ -1,0 +1,16 @@
+[Unit]
+Description=RPIThermostat
+
+Wants=network.target
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/RPIThermostat/
+ExecStart=/opt/RPIThermostat/site
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

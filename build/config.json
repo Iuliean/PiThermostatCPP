@@ -1,8 +1,9 @@
 {
     "site":{
         "port": 18080,
-        "password": "parola",
-        "cookieLifetime": 20
+        "password": "password",
+        "cookieLifetime": 20,
+        "cleanInterval": 3600
     },
 
     "controller":{
@@ -10,6 +11,7 @@
         "readDelay":0,
         "tempPin":22,
         "relayPin":3,
+        "saveInterval": 600,
         "display":{
             "digits":[12,16,20,21],
             "A":26,

@@ -40,3 +40,11 @@ input{
   color: white;
   border-radius: 5px;
 }
+
+#shutdown-button{
+  margin-top: 1rem;
+  border: 0px;
+  background-color: red;
+  color: white;
+  border-radius: 5px;
+}

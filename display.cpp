@@ -31,9 +31,7 @@ void Display::run()
         decimalPoint = false;
         int posShift = 0;
         
-        //this->tempMutex.lock();
         std::string temperature = this->number;
-        //this->tempMutex.unlock();
 
         for(int i = temperature.length() - 1; i > -1; i--)
         {
@@ -90,20 +88,12 @@ void Display::setSegments(const nlohmann::json& segs)
 
 void Display::show(float temp)
 {
-    //this->tempMutex.lock();
-
     this->number = std::to_string(temp).substr(0,4);
-    
-    //this->tempMutex.unlock();
 }
 
 void Display::show(const std::string& temp)
 {
-    //this->tempMutex.lock();
-
-    this->number = temp;
-    
-    //this->tempMutex.unlock();
+    this->number = temp;   
 }
 
 //Private

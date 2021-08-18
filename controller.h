@@ -31,6 +31,7 @@ private:
     unsigned int     temp_pin;
     unsigned int     tempReads;
     unsigned int     readDelay;
+    unsigned int     saveInterval;
 
     std::mutex parametersMutex;
 public:
@@ -45,8 +46,9 @@ public:
     void setParameters(float newThreshold, float newRange);
     void setThreshold(float newThreshold);
     void setRange(float newRange);
-private:
+    
     void toDisk();
+private:
     void checkTemp();
     
     float querryTempSensor();

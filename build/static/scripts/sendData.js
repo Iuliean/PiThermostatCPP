@@ -14,7 +14,6 @@ function sendData(){
             document.getElementById("threshold").value = "";
             document.getElementById("range").value = "";
             document.getElementById("success-tag").style.display = "block";
-            console.log("lmao");
         }
     });
 }

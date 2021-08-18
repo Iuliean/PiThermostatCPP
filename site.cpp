@@ -4,6 +4,7 @@
 #include "cookie.h"
 
 #include <thread>
+#include <stdio.h>
 
 Site::Site(Controller* otherController)
 {
@@ -13,6 +14,7 @@ Site::Site(Controller* otherController)
     nlohmann::json j = configFile.read();
 
     this->port          = j["site"]["port"];
+    this->cleanInterval = j["site"]["cleanInterval"];
     Cookie::lifetime    = j["site"]["cookieLifetime"];
     this->password      = hasher(j["site"]["password"]);
 
@@ -53,15 +55,22 @@ Site::Site(Controller* otherController)
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
                                 return this->setParams(req,cookies);
                             });
+
+    CROW_ROUTE(this->app, "/shutdown").methods(crow::HTTPMethod::POST)
+                            ([this](const crow::request req)
+                            {
+                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
+                                return this->shutdown(req,cookies);
+                            });
 }
 
 void Site::run()
 {
-    std::thread cookieCleaner([](){
+    std::thread cookieCleaner([this](){
         while(true)
         {
-            CROW_LOG_INFO << "Cookie cleaner sleeping for 1min";
-            std::this_thread::sleep_for(std::chrono::minutes(1));
+            CROW_LOG_INFO << "Cookie cleaner sleeping for " << this->cleanInterval << "secs";
+            std::this_thread::sleep_for(std::chrono::seconds(this->cleanInterval));
             CROW_LOG_INFO << "Cleaning cookies..."; 
             Cookie::cookieCleaner();
         }
@@ -130,9 +139,8 @@ crow::response Site::dashboard(const crow::request& req, const crow::CookieParse
 crow::response Site::getParams(const crow::CookieParser::context& cookies)
 {
     if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-    {
         return crow::response(401, "Unauthorized access");
-    }
+
 
     crow::json::wvalue returnJson;
     const Parameters params     = this->cntrl->getParameters();
@@ -149,9 +157,8 @@ crow::response Site::setParams(const crow::request& req, const crow::CookieParse
 {
     CROW_LOG_INFO << "SetParams call";
     if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-    {
         return crow::response(401, "Unauthorized access");
-    }
+    
 
     nlohmann::json newSettings = nlohmann::json::parse(req.body);
 
@@ -168,7 +175,18 @@ crow::response Site::setParams(const crow::request& req, const crow::CookieParse
     return crow::response(200);
 }
 
+crow::response Site::shutdown(const crow::request& req, const crow::CookieParser::context& cookies)
+{
+    if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
+        return crow::response(401, "Unauthorized access");
 
+    CROW_LOG_INFO << "Shutting down";
+
+    this->cntrl->toDisk();
+    system("sudo shutdown -P now");
+
+    return crow::response(200);
+}
 
 
 
