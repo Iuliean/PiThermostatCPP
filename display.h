@@ -11,8 +11,6 @@ private:
     std::string number = "00.0";
     std::map<std::string, unsigned int> segments;
     std::vector<int> digitPins;
-
-    //std::mutex tempMutex;
 public:
     Display() = default;
 
