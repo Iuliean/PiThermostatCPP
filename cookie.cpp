@@ -10,7 +10,7 @@ static const std::vector<char> alphabet = {
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
     }; 
 
-static std::default_random_engine generator;
+static std::default_random_engine generator (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 static std::uniform_int_distribution<int> distrubution(0,60);
 
 std::vector<Cookie> Cookie::cookies;
@@ -96,6 +96,8 @@ std::string Cookie::generateToken()
         {
             ready = true;
         }
+        else
+            token = "";
     }
     return token;
 }
