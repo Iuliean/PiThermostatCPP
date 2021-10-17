@@ -1,4 +1,4 @@
 {
-    "threshold": 29,
-    "range":0.3
+    "minTemp": 21,
+    "maxTemp": 21.5
 }

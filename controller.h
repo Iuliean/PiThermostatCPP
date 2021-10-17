@@ -8,8 +8,8 @@
 
 struct Parameters
 {
-    float   threshold;
-    float   range;
+    float   minTemp;
+    float   maxTemp;
     float   temp;
     bool    state;
 };
@@ -24,8 +24,8 @@ private:
     Relay   rel;
     Display disp;
 
-    float   threshold;
-    float   range;
+    float   minTemp;
+    float   maxTemp;
     float   temp;
 
     unsigned int     temp_pin;
@@ -43,9 +43,9 @@ public:
     Parameters getParameters();
     bool getState()const;
     
-    void setParameters(float newThreshold, float newRange);
-    void setThreshold(float newThreshold);
-    void setRange(float newRange);
+    void setParameters(float newMinTemp, float newMaxTemp);
+    void setMinTemp(float newThreshold);
+    void setMaxTemp(float newRange);
     
     void toDisk();
 private:

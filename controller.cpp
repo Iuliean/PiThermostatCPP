@@ -13,6 +13,7 @@
 #define LOG_CONTROLLER_WARNING CROW_LOG_WARNING << "[CONTROLLER]:"
 #define LOG_CONTROLLER_INFO CROW_LOG_INFO << "[CONTROLLER]:"
 
+
 //Controller Class
 
 Controller::Controller()
@@ -21,8 +22,8 @@ Controller::Controller()
 
 	nlohmann::json j = this->parametersFile.read();
 
-	this->range 		= j["range"];
-	this->threshold 	= j["threshold"];
+	this->minTemp		= j["minTemp"];
+	this->maxTemp 		= j["maxTemp"];
 
 	j = this->config.read();
 
@@ -69,13 +70,19 @@ void Controller::run()
 	{
 		this->checkTemp();
 		this->disp.show(this->temp);
-
+		
 		Parameters params = this->getParameters();
 
-		if (params.temp > params.threshold + params.range)
+		if (params.temp > params.maxTemp)
+		{
 			this->rel.off();
-		else if (params.temp < params.threshold - params.range)
+			LOG_CONTROLLER_INFO << "Current temp is: " << this->temp << " switch turned off";
+		}
+		else if (params.temp < params.minTemp)
+		{
 			this->rel.on();
+			LOG_CONTROLLER_INFO << "Current temp is:" << this->temp << " switch turned on";
+		}
 
 		if(std::chrono::duration<float>(std::chrono::high_resolution_clock::now()- lastSave).count() > saveInterval)
 		{
@@ -96,8 +103,8 @@ Parameters Controller::getParameters()
 	this->parametersMutex.lock();
 	
 	out.temp		= this->temp;
-	out.threshold	= this->threshold;
-	out.range		= this->range;
+	out.minTemp		= this->minTemp;
+	out.maxTemp		= this->maxTemp;
 	out.state		= this->getState();
 	
 	this->parametersMutex.unlock();
@@ -110,30 +117,30 @@ bool Controller::getState()const
 	return this->rel.isOn();
 }
 
-void Controller::setParameters(float newThreshold, float newRange)
+void Controller::setParameters(float newMinTemp, float newMaxTemp)
 {
 	this->parametersMutex.lock();
 	
-	this->range		= newRange;
-	this->threshold = newThreshold;
+	this->minTemp		= newMinTemp;
+	this->maxTemp 		= newMaxTemp;
 
 	this->parametersMutex.unlock();
 }
 
-void Controller::setThreshold(float newThreshold)
+void Controller::setMinTemp(float newMinTemp)
 {
 	this->parametersMutex.lock();
 
-	this->threshold = newThreshold;
+	this->minTemp 		= newMinTemp;
 
 	this->parametersMutex.unlock();
 }
 
-void Controller::setRange(float newRange)
+void Controller::setMaxTemp(float newMaxTemp)
 {
 	this->parametersMutex.lock();
 
-	this->range = newRange;
+	this->maxTemp 		= newMaxTemp;
 
 	this->parametersMutex.unlock();
 }
@@ -145,8 +152,8 @@ void Controller::toDisk()
 	LOG_CONTROLLER_INFO << "Writing parameters to disk >> parameters.json";
 	nlohmann::json j;
 
-	j["range"]			= double(int(this->range * 10))/10;
-	j["threshold"]		= double(int(this->threshold * 10))/10;
+	j["minTemp"]		= double(int(this->minTemp * 10))/10;
+	j["maxTemp"]		= double(int(this->maxTemp * 10))/10;
 
 	this->parametersFile.write(j);
 }

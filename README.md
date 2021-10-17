@@ -93,13 +93,10 @@ This file is used to store the operating range of the thermostat.
 
 ```json
 {
-    "threshold": 29,
-    "range":0.3
+    "minTemp": 29,
+    "maxTemp":0.3
 }
 ```
-
-The above settings mean that the thermostat will turn on if the temperature is below 28.7 and will turn off the temperature is above 29.3 .
-
 This file is updated every 10 minutes by the program with the values from memory.
 
 # Site Endpoints

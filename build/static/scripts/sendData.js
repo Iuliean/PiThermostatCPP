@@ -2,8 +2,8 @@ function sendData(){
     var formElements = document.getElementById("settings-form").elements;
     
     var data = JSON.stringify({
-        "threshold":parseFloat(formElements["threshold"].value), 
-        "range":parseFloat(formElements["range"].value)});
+        "minTemp":parseFloat(formElements["minTemp"].value), 
+        "maxTemp":parseFloat(formElements["maxTemp"].value)});
 
     $.post("/setParams",data,
     function(response,status)
@@ -11,8 +11,8 @@ function sendData(){
         console.log(status);
         if(status == "success")
         {
-            document.getElementById("threshold").value = "";
-            document.getElementById("range").value = "";
+            document.getElementById("minTemp").value = "";
+            document.getElementById("maxTemp").value = "";
             document.getElementById("success-tag").style.display = "block";
         }
     });

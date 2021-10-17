@@ -128,8 +128,8 @@ crow::response Site::dashboard(const crow::request& req, const crow::CookieParse
     crow::mustache::context pageContext;
     const Parameters params     = this->cntrl->getParameters();
     
-    pageContext["threshold"]    = params.threshold;
-    pageContext["range"]        = params.range;
+    pageContext["minTemp"]      = params.minTemp;
+    pageContext["maxTemp"]      = params.maxTemp;
     pageContext["temp"]         = params.temp;
     pageContext["state"]        = params.state ? "ON" : "OFF";
     return crow::response(200, crow::mustache::load("dashboard.html").render(pageContext));
@@ -145,8 +145,8 @@ crow::response Site::getParams(const crow::CookieParser::context& cookies)
     crow::json::wvalue returnJson;
     const Parameters params     = this->cntrl->getParameters();
 
-    returnJson["threshold"]     = params.threshold;
-    returnJson["range"]         = params.range;
+    returnJson["minTemp"]       = params.minTemp;
+    returnJson["maxTemp"]       = params.maxTemp;
     returnJson["temp"]          = params.temp;
     returnJson["state"]         = params.state ? "ON" : "OFF";
 
@@ -162,14 +162,14 @@ crow::response Site::setParams(const crow::request& req, const crow::CookieParse
 
     nlohmann::json newSettings = nlohmann::json::parse(req.body);
 
-    if(newSettings["threshold"] != nullptr && newSettings["range"] != nullptr)
-        this->cntrl->setParameters(newSettings["threshold"], newSettings["range"]);
+    if(newSettings["minTemp"] != nullptr && newSettings["maxTemp"] != nullptr)
+        this->cntrl->setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
     else
     {
-        if(newSettings["threshold"] == nullptr)
-            this->cntrl->setRange(newSettings["range"]);
+        if(newSettings["minTemp"] == nullptr)
+            this->cntrl->setMaxTemp(newSettings["maxTemp"]);
         else
-            this->cntrl->setThreshold(newSettings["threshold"]);
+            this->cntrl->setMinTemp(newSettings["minTemp"]);
     }
 
     return crow::response(200);
