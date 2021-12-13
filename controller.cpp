@@ -229,13 +229,13 @@ void Controller::checkTemp()
 	for(int i = 0; i < this->tempReads; i++)
 	{
 		float newTemp = this->querryTempSensor();
-		if(newTemp != INVALID_TEMP)
+		if(newTemp > -200)
 		{
 			sum += newTemp;
 		}
 		else
 		{
-			while(newTemp == INVALID_TEMP)
+			while(newTemp < -200)
 			{
 				delay(2000);
 				newTemp = this->querryTempSensor();
