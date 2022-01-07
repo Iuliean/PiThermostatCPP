@@ -2,20 +2,25 @@
 #include "crow/crow_all.h"
 #include "controller.h"
 #include "file.h"
+#include "database.h"
+#include "json_custom.h"
+#include "cookie.h"
 
+#include <string>
 
 class Site
 {
 private:
-    File configFile{"config.json"};
-    Controller* cntrl;
+    DataBase&       db = DataBase::getInstance();
+    File            configFile{"config.json"};
+    Controller*     cntrl;
+
+    int             port;
+    unsigned int    cleanInterval;
+    
+    std::string     password;
 
     crow::App<crow::CookieParser> app;
-
-    int port;
-    unsigned int cleanInterval;
-    std::string password;
-
 public:
     Site(Controller* otherController);
 
@@ -23,14 +28,24 @@ public:
 
 
 private:
-    crow::response auth(const crow::request& req);
+    void auth(const crow::request& req, crow::response& resp);
     
-    crow::response loginPage(const crow::request& req, const crow::CookieParser::context& cookies);
-    crow::response dashboard(const crow::request& req, const crow::CookieParser::context& cookies);
+    void loginPage(crow::response& resp);
+    void dashboard(crow::response& resp);
     
-    crow::response getParams(const crow::CookieParser::context& cookies);
-    crow::response setParams(const crow::request& req, const crow::CookieParser::context& cookies);
+    void getParams(crow::response& resp);
+    void setParams(crow::response& resp, const json& newSettings);
+
+    void getTemps(crow::response& resp, const std::string& start = "24h", const std::string& end = "now");
+    void getAverage(crow::response& resp);
+    void getAveragePast24h(crow::response& resp);
+    void getAverage(crow::response& resp, const std::string& start, const std::string& end = "now");
+
+    void getStates(crow::response& resp, const std::string& state, const std::string& start = "24h", const std::string& end = "now");
+    void getAverageOnTime(crow::response& resp);
+    void getAverageOnTimePast24h(crow::response& resp);
+    void getAverageOnTime(crow::response& resp, const std::string& start, const std::string& end = "now");
     
-    crow::response shutdown(const crow::request& req, const crow::CookieParser::context& cookies);
+    void shutdown(crow::response& resp);
     
 };
