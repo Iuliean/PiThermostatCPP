@@ -32,7 +32,6 @@ void Display::run()
         int posShift = 0;
         
         std::string temperature = this->number;
-
         for(int i = temperature.length() - 1; i > -1; i--)
         {
             const char& digit = temperature[i];
@@ -56,7 +55,7 @@ void Display::run()
             }
 
             digitalWrite(this->digitPins[posShift], LOW);
-            delay(10);
+            delay(this->refreshRate);
             digitalWrite(this->digitPins[posShift], HIGH);
             
             posShift++;
@@ -66,7 +65,7 @@ void Display::run()
 
 }
 
-void Display::setSegments(const nlohmann::json& segs)
+void Display::setSegments(const json& segs)
 {
     for(const unsigned int& i : segs["digits"])
         this->digitPins.push_back(i);
@@ -84,16 +83,6 @@ void Display::setSegments(const nlohmann::json& segs)
     {
         LOG_DISPLAY_INFO << "Segment "<<it->first <<" set to pin " <<it->second;
     }
-}
-
-void Display::show(float temp)
-{
-    this->number = std::to_string(temp).substr(0,4);
-}
-
-void Display::show(const std::string& temp)
-{
-    this->number = temp;   
 }
 
 //Private

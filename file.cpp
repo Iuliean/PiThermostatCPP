@@ -7,16 +7,16 @@ File::File(const std::string& newFileName)
 	this->fileName = newFileName;
 }
 
-nlohmann::json File::read()
+json File::read()
 {
 	std::ifstream file(this->fileName);
-	nlohmann::json out;
+	json out;
 
 	file >> out;
 	return out;
 }
 
-void File::write(const nlohmann::json& content)
+void File::write(const json& content)
 {
 	std::ofstream file(this->fileName);
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "json/json.hpp"
+#include "json_custom.h"
 
 #include <string>
 
@@ -10,6 +10,6 @@ private:
 public:
     File(const std::string& newFileName);
 
-    nlohmann::json read();
-    void write(const nlohmann::json& content);     
+    json read();
+    void write(const json& content);     
 };
