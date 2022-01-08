@@ -79,7 +79,7 @@ Site::Site(Controller* otherController)
                                 this->setParams(resp, newSettings);
                             });
                             
-    CROW_ROUTE(this->app, "/temperature/<string>").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/temperature/get/<string>").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp, const std::string& start)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -93,7 +93,7 @@ Site::Site(Controller* otherController)
                                 this->getTemps(resp, start);
                             });
     
-    CROW_ROUTE(this->app, "/temperature/<string>/<string>").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/temperature/get/<string>/<string>").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp, const std::string& start, const std::string& end)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -107,7 +107,7 @@ Site::Site(Controller* otherController)
                                 this->getTemps(resp, start, end);
                             });
                             
-    CROW_ROUTE(this->app, "/temperature/24h").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/temperature/get/24h").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -177,7 +177,7 @@ Site::Site(Controller* otherController)
                                 this->getAverage(resp, start, end);
                             });
     
-    CROW_ROUTE(this->app, "/state/<string>/24h").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/state/get/<string>/24h").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp, const std::string& state)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -191,7 +191,7 @@ Site::Site(Controller* otherController)
                                 this->getStates(resp, state);
                             });
 
-    CROW_ROUTE(this->app, "/state/<string>/<string>").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/state/get/<string>/<string>").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp, const std::string& state, const std::string& start)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -205,7 +205,7 @@ Site::Site(Controller* otherController)
                                 this->getStates(resp, state, start);
                             }); 
 
-    CROW_ROUTE(this->app, "/state/<string>/<string>/<string>").methods(crow::HTTPMethod::GET)
+    CROW_ROUTE(this->app, "/state/get/<string>/<string>/<string>").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp, const std::string& state, const std::string& start, const std::string& end)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
