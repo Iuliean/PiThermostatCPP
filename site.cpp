@@ -275,7 +275,7 @@ Site::Site(Controller* otherController)
                                 this->getAverageOnTime(resp, start, end);
                             }); 
 
-    CROW_ROUTE(this->app, "/shutdown").methods(crow::HTTPMethod::POST)
+    CROW_ROUTE(this->app, "/shutdown").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp)
                             {
                                 auto& cookies = this->app.get_context<crow::CookieParser>(req);
@@ -506,7 +506,7 @@ void Site::shutdown(crow::response& resp)
     CROW_LOG_INFO << "Shutting down";
 
     this->cntrl->toDisk();
-    system("sudo shutdown -P now");
+    system("sudo shutdown +1");
 
     resp.code = 200;
     resp.end();
