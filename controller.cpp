@@ -25,31 +25,21 @@ Controller::Controller()
 
 	j = this->config.read();
 
-	try{
-		this->numOfReads	= j["controller"]["numOfReads"];
-		this->readDelay		= j["controller"]["readDelay"];
-		this->saveInterval	= j["controller"]["saveInterval"];
-		this->calibration 	= j["controller"]["calibration"];
-		this->driverFile    = j["controller"]["driverFile"];
+	this->numOfReads	= j["controller"]["numOfReads"];
+	this->readDelay		= j["controller"]["readDelay"];
+	this->saveInterval	= j["controller"]["saveInterval"];
+	this->calibration 	= j["controller"]["calibration"];
+	this->driverFile    = j["controller"]["driverFile"];
 
-		if(this->numOfReads <= 0)
-			throw 100;
-		if(this->readDelay < 0)
-			throw 101;
-	}
-	catch (int error)
+	if (this->numOfReads <= 0)
 	{
-		switch(error)
-		{
-			case 100:	
-				LOG_CONTROLLER_WARNING << "Can't have numOfReads <= 0. Will result in division by 0 or invalid temperatures. Setting default 1.";
-				this->numOfReads	= 1;
-				break;
-			
-			case 101:
-				LOG_CONTROLLER_WARNING << "Can't have negative delay.Setting default 0.";
-				this->readDelay;
-		}
+		LOG_CONTROLLER_WARNING << "Can't have numOfReads <= 0. Setting default of 4";
+		this->numOfReads = 4;
+	}
+	if(this->readDelay < 0)
+	{
+		LOG_CONTROLLER_WARNING << "Can't have negative delay. Setting default of 2000";
+		this->readDelay = 2000;
 	}
 
 	this->rel.setPin(j["controller"]["relayPin"]);
