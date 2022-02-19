@@ -17,7 +17,7 @@
 Controller::Controller()
 {
 	wiringPiSetupGpio();
-
+	
 	json j = this->parametersFile.read();
 
 	this->minTemp		= j["minTemp"];
@@ -59,7 +59,7 @@ void Controller::run()
 		{
 			std::this_thread::sleep_for(std::chrono::minutes(10));
 			db.insertTemp(this->getParameters().temp);
-		}		
+		}
 	});
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> lastSave = std::chrono::high_resolution_clock::now();	
@@ -72,7 +72,7 @@ void Controller::run()
 		this->checkTemp();
 		Parameters params = this->getParameters();
 		this->disp.show(params.temp);
-		
+
 		if (params.temp > params.maxTemp && this->rel.isOn())
 		{
 			this->rel.off();
@@ -104,7 +104,6 @@ void Controller::run()
 			this->toDisk();
 		}
 	}
-
 }
 
 Parameters Controller::getParameters()

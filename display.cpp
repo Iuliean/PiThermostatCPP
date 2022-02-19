@@ -30,7 +30,7 @@ void Display::run()
     {
         decimalPoint = false;
         int posShift = 0;
-        
+
         std::string temperature = this->number;
         for(int i = temperature.length() - 1; i > -1; i--)
         {
@@ -55,7 +55,7 @@ void Display::run()
             }
 
             digitalWrite(this->digitPins[posShift], LOW);
-            delay(this->refreshRate);
+            delay(this->refreshRate.load());
             digitalWrite(this->digitPins[posShift], HIGH);
             
             posShift++;

@@ -4,14 +4,18 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <atomic>
+#include<mutex>
 
 class Display
 {
 private:
     std::string number = "00.0";
+    std::mutex numberMutex;
+
     std::map<std::string, unsigned int> segments;
     std::vector<int> digitPins;
-    unsigned int refreshRate;
+    std::atomic<unsigned int> refreshRate;
 public:
     Display() = default;
 
@@ -26,13 +30,9 @@ public:
     
     inline void show(float temp)
     {
+        std::lock_guard l (this->numberMutex);
         this->number = std::to_string(temp);
         this->number = this->number.substr(0,this->number.find('.')+2);
-    }
-    
-    inline void show(const std::string& temp)
-    {
-        this->number = temp;
     }
 
 private:
