@@ -27,8 +27,8 @@ private:
     float   minTemp;
     float   maxTemp;
     float   temp;
+    float   calibration;
 
-    int     calibration;
 
     unsigned int     numOfReads;
     unsigned int     readDelay;
