@@ -28,12 +28,14 @@ private:
     float   maxTemp;
     float   temp;
 
-    unsigned int     temp_pin;
-    unsigned int     tempReads;
+    int     calibration;
+
+    unsigned int     numOfReads;
     unsigned int     readDelay;
     unsigned int     saveInterval;
 
-    std::mutex parametersMutex;
+    std::string      driverFile;
+    std::mutex       parametersMutex;
 public:
     Controller();
 
@@ -49,7 +51,6 @@ public:
     
     void toDisk();
 private:
+
     void checkTemp();
-    
-    float querryTempSensor();
 };
