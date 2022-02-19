@@ -9,8 +9,8 @@
 
 # Building
 
-You need to install `boost` first with `sudo apt install build-essential libboost-all-dev`
-after that a simple ` make ` should do the trick. The output it's in `build/`
+You first need to install `boost` with `sudo apt install build-essential libboost-all-dev`
+after that add `dtoverlay=i2c-sensor,bmp280` to `/boot/config.txt` (this enables the system module for the BMP280 sensor) then `make`
 
 If you wish to make it more permanent use `sudo make install` this will move the `build` folder into `/opt/RPIThermostat` and it will also move `libwiringPi.so` and `RPIThermostat.service` to `/usr/lib` and `/etc/systemd/system/`. Then you can use `systemctl` to start/stop/enable/disable the service
 
@@ -49,9 +49,10 @@ This file contains all the parameters required to start the app. Default:
     },
 
     "controller":{
-        "tempReads":1,
-        "readDelay":0,
-        "tempPin":22,
+        "numOfReads":1,
+        "readDelay":7000,
+        "calibration":-2,
+        "driverFile":"sys/bus/iio/devices/iio:device0/in_temp_input",
         "relayPin":3,
         "saveInterval": 600,
         "display":{
@@ -78,10 +79,10 @@ This file contains all the parameters required to start the app. Default:
     - `cookieLifetime` this determines the lifetime of the authentification tokens both server and client side
     - `cleanInterval` the amount of time at which the program cleans expired cookies from memory
 - `controller` settings related to the phyisical part of the thermostat
-    - `tempReads` determines how many temperature readings the program makes and averages them
+    - `numOfReads` determines how many temperature readings the program makes and averages them
     - `readDelay` the delay between temperature readings
-    - `tempPin` pin on which the temperature sensor is installed on
-    - `realyPin` pin on which the relay is installed on
+    - `calibration` offsets the read temperatures by the specified value
+    - `driverFile` path to BMP280 input file 
     - `saveInterval` the amount of time at which the program saves the internal `threshold` and `range` to disk
     - `display`
         + `digits` pins responsible for each digit segment in the display in order
@@ -110,6 +111,8 @@ The main endpoints of the site are:
 - `/getParams` if a authentification cookie is present it returns a json object containing the current temperature, state, threshold and range
 - `/setParams` recieves `POST` requests with json objects that contain the new threshold and range and it sets those parameters to the recieved ones
 - `/shutdown` issues shutdown command to the system `sudo system -P now`
+- `/temperature` get temperature related data from the database. Example: `/temperature/get/2021-01-01` returns all temperature from the specified date untill the present day
+- `/state` same as with the temperature endpoint
 
 By default in CrowCpp every file in `build/static/` can be accessed through `/static/file`
 
