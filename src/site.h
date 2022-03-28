@@ -1,5 +1,6 @@
 #pragma once
-#include "crow/crow_all.h"
+#include "crow.h"
+#include "crow/middlewares/cookie_parser.h"
 #include "controller.h"
 #include "file.h"
 #include "database.h"
@@ -7,6 +8,21 @@
 #include "cookie.h"
 
 #include <string>
+
+struct Authentificator : crow::ILocalMiddleware
+{
+    struct context{};
+
+    void before_handle(crow::request& req, crow::response& res, context& ctx)
+    {
+        CROW_LOG_DEBUG << "keek";
+    }
+
+    void after_handle(crow::request& req, crow::response& res, context& ctx)
+    {
+        CROW_LOG_DEBUG << "lol";
+    }
+};
 
 class Site
 {
@@ -20,7 +36,7 @@ private:
     
     std::string     password;
 
-    crow::App<crow::CookieParser> app;
+    crow::App<crow::CookieParser, Authentificator> app;
 public:
     Site(Controller* otherController);
 

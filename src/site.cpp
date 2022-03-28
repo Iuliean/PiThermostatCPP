@@ -16,7 +16,7 @@ Site::Site(Controller* otherController)
     Cookie::lifetime    = j["site"]["cookieLifetime"];
 
     app.loglevel(crow::LogLevel::Info);
-    
+
     CROW_ROUTE(this->app, "/").methods(crow::HTTPMethod::GET)
                             ([this](const crow::request req, crow::response& resp)
                             {
@@ -332,7 +332,7 @@ void Site::loginPage(crow::response& resp)
 {
     CROW_LOG_INFO << "Serving login page";
     resp.code = 200;
-    resp.body = crow::mustache::load("login.html").render();
+    resp.body = crow::mustache::load("login.html").render_string();
     resp.end();
 }
 
@@ -350,7 +350,7 @@ void Site::dashboard(crow::response& resp)
     pageContext["state"]        = params.state ? "ON" : "OFF";
 
     resp.code = 200;
-    resp.body = crow::mustache::load("dashboard.html").render(pageContext);
+    resp.body = crow::mustache::load("dashboard.html").render_string(pageContext);
     resp.end();
 }
 

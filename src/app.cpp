@@ -1,5 +1,5 @@
 #include "app.h"
-#include "crow/crow_all.h"
+#include "crow/logging.h"
 
 #include <thread>
 

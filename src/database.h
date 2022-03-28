@@ -1,5 +1,5 @@
 #pragma once
-#include "crow/crow_all.h"
+#include "crow/logging.h"
 #include "sqlite/sqlite3.h"
 #include "json_custom.h"
 

@@ -1,4 +1,4 @@
-#include "crow/crow_all.h"
+#include "crow/logging.h"
 #include "display.h"
 
 #include <wiringPi.h>

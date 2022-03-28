@@ -1,12 +1,13 @@
 #include "controller.h"
 #include "json_custom.h"
 #include "wiringPi.h"
-#include "crow/crow_all.h"
+#include "crow/logging.h"
 #include "database.h"
 
 #include <chrono>
 #include <thread>
-#include<iostream>
+#include <iostream>
+#include <fstream>
 
 #define LOG_CONTROLLER_WARNING CROW_LOG_WARNING << "[CONTROLLER]:"
 #define LOG_CONTROLLER_INFO CROW_LOG_INFO << "[CONTROLLER]:"

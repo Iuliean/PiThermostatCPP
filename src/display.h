@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 #include <atomic>
-#include<mutex>
+#include <mutex>
 
 class Display
 {
@@ -30,7 +30,7 @@ public:
     
     inline void show(float temp)
     {
-        std::lock_guard l (this->numberMutex);
+        std::lock_guard<std::mutex> l (this->numberMutex);
         this->number = std::to_string(temp);
         this->number = this->number.substr(0,this->number.find('.')+2);
     }

@@ -1,49 +1,51 @@
 CXX=g++
+COMPILER_PREFIX=
+FLAGS=-L$(OUTPUTDIR) -std=c++17 -lpthread -lwiringPi -lboost_system -ldl
+export FLAGS
 
-WIRINGPI=dependencies/includes/WiringPi/wiringPi/
-SHA256=dependencies/includes/sha/
-FLAGS=-Ldependencies/libs -std=c++17 -O3 -lsha256 -lpthread -lwiringPi -lboost_system -ldl -Idependencies/includes/ -I$(WIRINGPI) 
+ifndef RELEASE
+DEBUG=-g3
+$(shell mkdir -p intermediates/debug)
+OUTPUTDIR ?=$(shell pwd)/intermediates/debug
+FINALOUTPUT=build/debug
+else
+DEBUG=-O3
+$(shell mkdir -p intermediates/release)
+OUTPUTDIR ?=$(shell pwd)/intermediates/release
+FINALOUTPUT=build/release
+endif
 
-CURRENT_DIR=$(shell pwd)
-OUTPUT=build
-FILES=cookie.cpp controller.cpp display.cpp file.cpp site.cpp relay.cpp app.cpp main.cpp
-OJBFILES=$(FILES:.cpp=.o) sqlite.o
+export DEBUG
+export OUTPUTDIR
+export COMPILER_PREFIX
 
-all: setup sqlite sha256 wiringPi main
+.PHONY:all
+all:libwiringpi sqlite sha thermostat
+	mkdir -p $(FINALOUTPUT)
+	$(COMPILER_PREFIX)g++ -o $(FINALOUTPUT)/site $(shell ls $(OUTPUTDIR)/*.o) $(FLAGS)
+	cp -r build/additional_files/* $(FINALOUTPUT)
 
-install: all
-	cp build/RPIThermostat.service /etc/systemd/system/
-	chmod 640 /etc/systemd/system/RPIThermostat.service
+.PHONY:sha
+sha:
+	$(MAKE) -C dependencies/includes/sha/
 
-	mv build/libwiringPi.so /usr/lib/
-
-	cp -r build /opt/RPIThermostat
-
-setup:
-	mkdir -p $(OUTPUT)
-
-main: $(OJBFILES)
-	$(CXX) -o $(OUTPUT)/site $(OJBFILES) $(FLAGS)
-
-%.o: %.cpp
-	$(CXX) -c $< $(FLAGS)
-
-wiringPi:
-	$(MAKE) -C $(WIRINGPI) EXTRA_CFLAGS=-O3
-	mv $(WIRINGPI)*.so.* dependencies/libs/libwiringPi.so
-	cp dependencies/libs/libwiringPi.so ./build/
-
-sha256:
-	$(MAKE) -C $(SHA256)
-	cp $(SHA256)/libsha256.a dependencies/libs/
-
+.PHONY:sqlite
 sqlite:
-	$(MAKE) -C dependencies/includes/sqlite/
+	$(MAKE) -C dependencies/includes/sqlite/ 
 
-	cp dependencies/includes/sqlite/sqlite.o sqlite.o
+.PHONY:libwiringpi
+libwiringpi:
+ifeq '$(shell ldconfig -p | grep libwiringPi)' ''
+	$(MAKE) -C dependencies/includes/WiringPi/wiringPi/
+	cp dependencies/includes/WiringPi/wiringPi/libwiringPi.so.* $(OUTPUTDIR)/libwiringPi.so
+endif
 
+.PHONY:thermostat
+thermostat:
+	$(MAKE) -C src/ all
+
+.PHONY:clean
 clean:
-	$(MAKE) -C $(WIRINGPI) clean
-	$(MAKE) -C $(SHA256) clean
-
-	rm *.o
+	rm -f intermediates/debug/*
+	rm -f intermediates/release/*
+	$(MAKE) -C dependencies/includes/WiringPi/wiringPi/ clean

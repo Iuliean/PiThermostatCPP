@@ -5,3 +5,8 @@
 *.so
 site
 .vscode
+intermediates
+build/release
+build/debug
+release.txt
+debug.txt

@@ -1,11 +1,4 @@
-CXX=g++
+all:$(OUTPUTDIR)/sha256.o
 
-
-
-sha256.a:sha256.o
-	ar rcs libsha256.a sha256.o
-
-sha256.o:sha256.cpp
-	$(CXX) -c -o sha256.o sha256.cpp -O3
-clean:
-	rm *.o
+$(OUTPUTDIR)/sha256.o:sha256.cpp
+	$(COMPILER_PREFIX)g++ -c -o $(OUTPUTDIR)/sha256.o sha256.cpp $(DEBUG)
