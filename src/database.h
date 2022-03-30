@@ -93,6 +93,23 @@ private:
     DataBase()
     {
         sqlite3_open("data.db", &this->connection);
+
+        char* msg = nullptr;
+        sqlite3_exec(this->connection, "CREATE TABLE IF NOT EXISTS Temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);", nullptr, nullptr, &msg);
+
+        if(msg)
+        {
+            CROW_LOG_ERROR << "[DataBase]:" << msg;
+            sqlite3_free(msg);
+        }
+
+        sqlite3_exec(this->connection, "CREATE TABLE IF NOT EXISTS States (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);", nullptr, nullptr, &msg);
+        
+        if(msg)
+        {
+            CROW_LOG_ERROR << "[DataBase]:" << msg;
+            sqlite3_free(msg);
+        }
     }
     DataBase(DataBase const& copy);
     DataBase& operator=(DataBase const& copy);
