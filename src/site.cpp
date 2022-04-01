@@ -4,6 +4,15 @@
 #include <thread>
 #include <stdio.h>
 
+#define ROUTE(url, method, func) CROW_ROUTE(this->app, url)\
+                                .methods(method)\
+                                ([this](crow::request& req, crow::response& res){this->func(req,res);})
+
+#define ROUTE_MIDDLEWARES(url, method, middleware, func) CROW_ROUTE(this->app, url)\
+                                                        .methods(method)\
+                                                        .CROW_MIDDLEWARES(this->app, middleware)\
+                                                        ([this](crow::request& req, crow::response& res){this->func(req,res);})
+
 Site::Site(Controller* otherController)
 {
     this->cntrl         = otherController;
@@ -17,277 +26,25 @@ Site::Site(Controller* otherController)
 
     app.loglevel(crow::LogLevel::Info);
 
-    CROW_ROUTE(this->app, "/").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.redirect("/dashboard");
-                                    resp.end();
-                                    return;
-                                }
-                                this->loginPage(resp);
-                            });
-    
-    CROW_ROUTE(this->app, "/auth").methods(crow::HTTPMethod::POST)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                this->auth(req, resp);
-                            });
-    
-    CROW_ROUTE(this->app, "/dashboard").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 303;
-                                    resp.set_header("location", "/");
-                                    resp.end();     
-                                    return;
-                                }
-                                this->dashboard(resp);
-                            });
-    
-    CROW_ROUTE(this->app, "/getParams").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getParams(resp);
-                            });
+    ROUTE_MIDDLEWARES("/", crow::HTTPMethod::GET, Authentificator, loginPage);
 
-    CROW_ROUTE(this->app, "/setParams").methods(crow::HTTPMethod::POST)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                json newSettings = json::parse(req.body);
-                                this->setParams(resp, newSettings);
-                            });
+    ROUTE("/auth", crow::HTTPMethod::POST, auth);
+
+    ROUTE_MIDDLEWARES("/dashboard", crow::HTTPMethod::GET, Authentificator, dashboard);
+    
+    ROUTE_MIDDLEWARES("/getParams", crow::HTTPMethod::GET, Authentificator, getParams);
+
+    ROUTE_MIDDLEWARES("/setParams", crow::HTTPMethod::POST, Authentificator, setParams);
                             
-    CROW_ROUTE(this->app, "/temperature/get/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp, const std::string& start)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getTemps(resp, start);
-                            });
+    ROUTE_MIDDLEWARES("/temperature/get", crow::HTTPMethod::GET, Authentificator, getTemps);
     
-    CROW_ROUTE(this->app, "/temperature/get/<string>/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp, const std::string& start, const std::string& end)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getTemps(resp, start, end);
-                            });
-                            
-    CROW_ROUTE(this->app, "/temperature/get/24h").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getTemps(resp);
-                            });
-    
-    CROW_ROUTE(this->app, "/temperature/getAverage").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverage(resp);
-                            });
+    ROUTE_MIDDLEWARES("/temperature/getAverage", crow::HTTPMethod::GET, Authentificator, getAverage);
 
-    CROW_ROUTE(this->app, "/temperature/getAverage/24h").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAveragePast24h(resp);
-                            });
-    
-    CROW_ROUTE(this->app, "/temperature/getAverage/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp,const std::string& start)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverage(resp, start);
-                            });
+    ROUTE_MIDDLEWARES("/state/get", crow::HTTPMethod::GET, Authentificator, getStates);
 
-    CROW_ROUTE(this->app, "/temperature/getAverage/<string>/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp,const std::string& start, const std::string& end)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverage(resp, start, end);
-                            });
-    
-    CROW_ROUTE(this->app, "/state/get/<string>/24h").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp, const std::string& state)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getStates(resp, state);
-                            });
+    ROUTE_MIDDLEWARES("/state/getAverage", crow::HTTPMethod::GET, Authentificator, getAverageStateTime);
 
-    CROW_ROUTE(this->app, "/state/get/<string>/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp, const std::string& state, const std::string& start)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getStates(resp, state, start);
-                            }); 
-
-    CROW_ROUTE(this->app, "/state/get/<string>/<string>/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp, const std::string& state, const std::string& start, const std::string& end)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getStates(resp, state ,start, end);
-                            });
-
-    CROW_ROUTE(this->app, "/state/getAverageOnTime").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverageOnTime(resp);
-                            });
-
-    CROW_ROUTE(this->app, "/state/getAverageOnTime/24h").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverageOnTimePast24h(resp);
-                            });
-
-    CROW_ROUTE(this->app, "/state/getAverageOnTime/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp,const std::string& start)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverageOnTime(resp, start);
-                            });
-            
-    CROW_ROUTE(this->app, "/state/getAverageOnTime/<string>/<string>").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp,const std::string& start, const std::string& end)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                this->getAverageOnTime(resp, start, end);
-                            }); 
-
-    CROW_ROUTE(this->app, "/shutdown").methods(crow::HTTPMethod::GET)
-                            ([this](const crow::request req, crow::response& resp)
-                            {
-                                auto& cookies = this->app.get_context<crow::CookieParser>(req);
-                                if(!Cookie::verifyCookie(cookies.get_cookie("authToken")))
-                                {
-                                    resp.code = 401;
-                                    resp.body = "Unauthorized access";
-                                    resp.end();
-                                    return;
-                                }
-                                return this->shutdown(resp);
-                            });
+    ROUTE_MIDDLEWARES("/shutdown", crow::HTTPMethod::GET, Authentificator, shutdown);
 }
 
 void Site::run()
@@ -313,8 +70,6 @@ void Site::auth(const crow::request& req, crow::response& resp)
     crow::multipart::message msg(req);
     if(msg.parts[0].body == this->password)
     {
-        resp.code = 303;
-        resp.set_header("location", "/dashboard");
         resp.add_header("set-cookie", Cookie::generateCookie().toString());
         resp.end();
         return;
@@ -328,7 +83,7 @@ void Site::auth(const crow::request& req, crow::response& resp)
     }
 }
 
-void Site::loginPage(crow::response& resp)
+void Site::loginPage(crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Serving login page";
     resp.code = 200;
@@ -337,7 +92,7 @@ void Site::loginPage(crow::response& resp)
 }
 
 
-void Site::dashboard(crow::response& resp)
+void Site::dashboard(crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Serving Dashboard page";
 
@@ -355,7 +110,7 @@ void Site::dashboard(crow::response& resp)
 }
 
 
-void Site::getParams(crow::response& resp)
+void Site::getParams(crow::request& req, crow::response& resp)
 {
     json returnJson;
     const Parameters params     = this->cntrl->getParameters();
@@ -372,9 +127,9 @@ void Site::getParams(crow::response& resp)
     resp.end();
 }
 
-void Site::setParams(crow::response& resp, const json& newSettings)
+void Site::setParams(crow::request& req, crow::response& resp)
 {
-    CROW_LOG_INFO << "SetParams call";
+    const json newSettings = json::parse(req.body);
     if(newSettings["minTemp"] != nullptr && newSettings["maxTemp"] != nullptr)
         this->cntrl->setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
     else
@@ -389,74 +144,125 @@ void Site::setParams(crow::response& resp, const json& newSettings)
     resp.end();
 }
 
-void Site::getTemps(crow::response& resp, const std::string& start, const std::string& end)
+void Site::getTemps(crow::request& req, crow::response& resp)
 {
     json returnJson;
+    const char* start = req.url_params.get("startDate");
+    const char* end   = req.url_params.get("endDate");
     
-    if(start == "24h")
+    if(start == nullptr && end == nullptr)
         this->db.getTemperaturesPast24h(returnJson);
     else
-        this->db.getTemperatures(start, end, returnJson);
-    
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
-
-void Site::getAverage(crow::response& resp)
-{
-    json returnJson;
-
-    this->db.getAverageTemp(returnJson);
-
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
-
-void Site::getAveragePast24h(crow::response& resp)
-{
-    json returnJson;
-
-    this->db.getAverageTempPast24h(returnJson);
-
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
-
-void Site::getAverage(crow::response& resp, const std::string& start, const std::string& end)
-{
-    json returnJson;
-    
-    this->db.getAverageTemp(start, end, returnJson);
-
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
-
-void Site::getStates(crow::response& resp, const std::string& state, const std::string& start, const std::string& end)
-{
-    json returnJson;
-
-    if(state == "off")
     {
-        if(start == "24h")
-            this->db.getStates24h("0", returnJson);
+        if(start == nullptr)
+            this->db.getTemperatures("1970-01-01", end, returnJson);
         else
-            this->db.getStates("0", start, end, returnJson);
+        {
+            if(strcmp(start,"24h") == 0)
+                this->db.getTemperaturesPast24h(returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getTemperatures(start, "now" ,returnJson);
+                else
+                    this->db.getTemperatures(start, end, returnJson);
+            }
+        }
+    }
+
+    resp.body = returnJson.dump(4);
+    resp.code = 200;
+    resp.set_header("Content-Type", "Application/json");
+    resp.end();
+}
+
+void Site::getAverage(crow::request& req, crow::response& resp)
+{
+    json returnJson;
+    const char* start = req.url_params.get("startDate");
+    const char* end   = req.url_params.get("endDate");
+
+    if(start == nullptr && end == nullptr)
+        this->db.getAverageTemp(returnJson);
+    else
+    {
+        if(start == nullptr)
+            this->db.getAverageTemp("1970-01-01", end, returnJson);
+        else
+        {
+            if(strcmp(start,"24h") == 0)
+                this->db.getAverageTempPast24h(returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getAverageTemp(start, "now" ,returnJson);
+                else
+                    this->db.getAverageTemp(start, end, returnJson);
+            }
+        }
+    }    
+
+    resp.body = returnJson.dump(4);
+    resp.code = 200;
+    resp.set_header("Content-Type", "Application/json");
+    resp.end();
+}
+
+void Site::getStates(crow::request& req, crow::response& resp)
+{
+    json returnJson;
+
+    const char* state = req.url_params.get("state");
+    const char* start = req.url_params.get("startDate");
+    const char* end   = req.url_params.get("endDate");
+
+    if(state == nullptr)
+        state = "on";
+
+
+    if(strcmp(state, "on") == 0)
+    {
+       if(start == nullptr)
+       {
+            if(end == nullptr)
+                this->db.getStates24h("1", returnJson);
+            else
+                this->db.getStates("1", "1970-01-01", end, returnJson);
+       }
+       else
+       {
+            if(strcmp(start, "24h") == 0)
+                this->db.getStates24h("1", returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getStates("1", start, "now", returnJson);
+                else
+                    this->db.getStates("1", start, end, returnJson);
+            }
+       }
     }
     else
     {
-        if(start == "24h")
-            this->db.getStates24h("1", returnJson);
-        else
-            this->db.getStates("1", start, end, returnJson);
+       if(start == nullptr)
+       {
+            if(end == nullptr)
+                this->db.getStates24h("0", returnJson);
+            else
+                this->db.getStates("0", "1970-01-01", end, returnJson);
+       }
+       else
+       {
+            if(strcmp(start, "24h") == 0)
+                this->db.getStates24h("0", returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getStates("0", start, "now", returnJson);
+                else
+                    this->db.getStates("0", start, end, returnJson);
+            }
+       }
     }
 
     resp.body = returnJson.dump(4);
@@ -465,43 +271,71 @@ void Site::getStates(crow::response& resp, const std::string& state, const std::
     resp.end();
 }
 
-void Site::getAverageOnTime(crow::response& resp)
+void Site::getAverageStateTime(crow::request& req, crow::response& resp)
 {
     json returnJson;
     
-    this->db.getAverageOnTime(returnJson);
-    
+    const char* state = req.url_params.get("state");
+    const char* start = req.url_params.get("startDate");
+    const char* end   = req.url_params.get("endDate");
+
+    if(state == nullptr)
+        state = "on";
+
+
+    if(strcmp(state, "on") == 0)
+    {
+       if(start == nullptr)
+       {
+            if(end == nullptr)
+                this->db.getAverageStateTimePast24h("1", returnJson);
+            else
+                this->db.getAverageStateTime("1", "1970-01-01", end, returnJson);
+       }
+       else
+       {
+            if(strcmp(start, "24h") == 0)
+                this->db.getAverageStateTimePast24h("1", returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getAverageStateTime("1", start, "now", returnJson);
+                else
+                    this->db.getAverageStateTime("1", start, end, returnJson);
+            }
+       }
+    }
+    else
+    {
+       if(start == nullptr)
+       {
+            if(end == nullptr)
+                this->db.getAverageStateTimePast24h("0", returnJson);
+            else
+                this->db.getAverageStateTime("0", "1970-01-01", end, returnJson);
+       }
+       else
+       {
+            if(strcmp(start, "24h") == 0)
+                this->db.getAverageStateTimePast24h("0", returnJson);
+            else
+            {
+                if(end == nullptr)
+                    this->db.getAverageStateTime("0", start, "now", returnJson);
+                else
+                    this->db.getAverageStateTime("0", start, end, returnJson);
+            }
+       }
+    }
+
     resp.body = returnJson.dump(4);
     resp.code = 200;
     resp.set_header("Content-Type", "Application/json");
     resp.end();
 }
 
-void Site::getAverageOnTimePast24h(crow::response& resp)
-{
-    json returnJson;
-    
-    this->db.getAverageOnTimePast24h(returnJson);
-  
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
 
-void Site::getAverageOnTime(crow::response& resp, const std::string& start, const std::string& end)
-{
-    json returnJson;
-    
-    this->db.getAverageOnTime(start, end, returnJson);
-
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
-    resp.set_header("Content-Type", "Application/json");
-    resp.end();
-}
-
-void Site::shutdown(crow::response& resp)
+void Site::shutdown(crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Shutting down";
 
@@ -510,7 +344,7 @@ void Site::shutdown(crow::response& resp)
 
     resp.code = 200;
     resp.end();
-}
+}   
 
 
 

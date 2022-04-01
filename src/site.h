@@ -13,15 +13,35 @@ struct Authentificator : crow::ILocalMiddleware
 {
     struct context{};
 
-    void before_handle(crow::request& req, crow::response& res, context& ctx)
+    template<typename AllContext>
+    void before_handle(crow::request& req, crow::response& res, context& ctx, AllContext& all_ctx)
     {
-        CROW_LOG_DEBUG << "keek";
+        auto cookies = all_ctx.template get<crow::CookieParser>();
+        if(Cookie::verifyCookie(cookies.get_cookie("authToken")))
+        {
+            if(req.url == "/")
+            {
+                res.redirect("/dashboard");
+                res.end();
+            }
+            else
+                return;
+        }
+        else
+        {
+            if(req.url == "/")
+                return;
+            else
+            {
+                res.code = 401;
+                res.end();
+                return;
+            }
+        }
+        
     }
 
-    void after_handle(crow::request& req, crow::response& res, context& ctx)
-    {
-        CROW_LOG_DEBUG << "lol";
-    }
+    void after_handle(crow::request& req, crow::response& res, context& ctx){}
 };
 
 class Site
@@ -46,22 +66,18 @@ public:
 private:
     void auth(const crow::request& req, crow::response& resp);
     
-    void loginPage(crow::response& resp);
-    void dashboard(crow::response& resp);
+    void loginPage(crow::request& req, crow::response& resp);
+    void dashboard(crow::request& req, crow::response& resp);
     
-    void getParams(crow::response& resp);
-    void setParams(crow::response& resp, const json& newSettings);
+    void getParams(crow::request& req, crow::response& resp);
+    void setParams(crow::request& req, crow::response& resp);
 
-    void getTemps(crow::response& resp, const std::string& start = "24h", const std::string& end = "now");
-    void getAverage(crow::response& resp);
-    void getAveragePast24h(crow::response& resp);
-    void getAverage(crow::response& resp, const std::string& start, const std::string& end = "now");
-
-    void getStates(crow::response& resp, const std::string& state, const std::string& start = "24h", const std::string& end = "now");
-    void getAverageOnTime(crow::response& resp);
-    void getAverageOnTimePast24h(crow::response& resp);
-    void getAverageOnTime(crow::response& resp, const std::string& start, const std::string& end = "now");
+    void getTemps(crow::request& req, crow::response& resp);
+    void getAverage(crow::request& req, crow::response& resp);
     
-    void shutdown(crow::response& resp);
+    void getStates(crow::request& req, crow::response& resp);
+    void getAverageStateTime(crow::request& req, crow::response& resp);
+    
+    void shutdown(crow::request& req, crow::response& resp);
     
 };

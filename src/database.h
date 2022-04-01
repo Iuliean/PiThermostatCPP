@@ -73,19 +73,19 @@ public:
         this->queryDB("SELECT * FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
     }
 
-    inline void getAverageOnTime(json& j)
+    inline void getAverageStateTime(const std::string& state, json& j)
     {
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE date = DATE('now') AND state = 1;", j);
+        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE date = DATE('now') AND state =" + state + ";", j);
     }
 
-    inline void getAverageOnTimePast24h(json& j)
+    inline void getAverageStateTimePast24h(const std::string& state, json& j)
     { 
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state = 1;", j);
+        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
     }
 
-    inline void getAverageOnTime(const std::string& start, const std::string& end, json& j)
+    inline void getAverageStateTime(const std::string& state, const std::string& start, const std::string& end, json& j)
     {
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state = 1;", j);       
+        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state =" + state +";", j);       
     }
 private:
     sqlite3* connection;
