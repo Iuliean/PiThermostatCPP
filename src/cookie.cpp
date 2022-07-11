@@ -88,7 +88,7 @@ std::string Cookie::generateToken()
 
     while (!ready)
     {
-        for(int i = 0; i < 24; i++)
+        for(int i = 0; i < alphabet.size(); i++)
         {
             token += alphabet[distrubution(generator)];
         }
