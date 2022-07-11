@@ -1,0 +1,4 @@
+-xc++
+-I../dependencies/includes/
+-I../dependencies/includes/Crow/include/
+-I../dependencies/includes/WiringPi/wiringPi/
