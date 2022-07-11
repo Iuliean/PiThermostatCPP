@@ -1,13 +1,13 @@
 #pragma once 
-
+#include <atomic>
 
 class Relay
 {
 private:
-    bool state = false;
-    int pin;
+    std::atomic_bool state;
+    std::atomic_int pin;
 public:
-    Relay() = default;
+    Relay();
     void setup();
 
     bool isOn()const;

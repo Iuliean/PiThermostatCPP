@@ -34,8 +34,8 @@ private:
     unsigned int     readDelay;
     unsigned int     saveInterval;
 
-    std::string         driverFile;
-    std::mutex          parametersMutex;
+    std::string      driverFile;
+    std::mutex       parametersMutex;
 public:    
     Controller();
 

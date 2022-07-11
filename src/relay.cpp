@@ -2,30 +2,35 @@
 
 #include <wiringPi.h>
 
+Relay::Relay()
+{
+    state = false;
+}
+
 void Relay::setup()
 {
-    pinMode(this->pin, OUTPUT);
-    digitalWrite(this->pin, HIGH);
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
 }
 
 bool Relay::isOn()const
 {
-    return this->state;
+    return state;
 }
 
 void Relay::setPin(int relayPin)
 {
-    this->pin = relayPin;
+    pin = relayPin;
 }
 
 void Relay::off()
 {
-    digitalWrite(this->pin, HIGH);
-    this->state = false;
+    digitalWrite(pin, HIGH);
+    state = false;
 }
 
 void Relay::on()
 {
-    digitalWrite(this->pin, LOW);
-    this->state = true;   
+    digitalWrite(pin, LOW);
+    state = true;   
 }

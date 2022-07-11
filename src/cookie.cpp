@@ -1,6 +1,11 @@
 #include"cookie.h"
 
+#include <atomic>
+#include <memory>
+#include <mutex>
 #include <random>
+#include <set>
+#include <vector>
 
 #define HOUR 3600
 
@@ -13,51 +18,47 @@ static const std::vector<char> alphabet = {
 static std::default_random_engine generator (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 static std::uniform_int_distribution<int> distrubution(0,60);
 
-std::vector<Cookie> Cookie::cookies;
+std::vector<std::shared_ptr<Cookie>> Cookie::cookies;
 std::mutex Cookie::cookiesMutex;
-unsigned int Cookie::lifetime;
-
+std::atomic<unsigned int> Cookie::lifetime;
 
 Cookie::Cookie()
 {
-    this->token = Cookie::generateToken();
-    this->timeOfCreation = std::chrono::high_resolution_clock::now();
+    std::lock_guard<std::mutex> l(m_objectMutex);
+    token = Cookie::generateToken();
+    timeOfCreation = std::chrono::high_resolution_clock::now();
 }
 
 bool Cookie::isExpired()const
 {
+    std::lock_guard<std::mutex> l(m_objectMutex);
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<float>(now - this->timeOfCreation).count() > Cookie::lifetime ? true : false;
 }
 
 std::string Cookie::toString()const
 {
-    return "authToken=" + this->token + "; Max-Age=" + std::to_string(Cookie::lifetime);
+    std::lock_guard<std::mutex> l (m_objectMutex);
+    return "authToken=" + token + "; Max-Age=" + std::to_string(Cookie::lifetime);
 }
 
-const Cookie& Cookie::generateCookie()
+std::weak_ptr<const Cookie> Cookie::generateCookie()
 {
-    Cookie::cookiesMutex.lock();
-    Cookie::cookies.emplace_back();    
-    Cookie::cookiesMutex.unlock();
-    
-    return Cookie::cookies.back();
+    std::lock_guard<std::mutex> l(cookiesMutex);
+    cookies.emplace_back(std::make_shared<Cookie>());
+
+    return cookies.back();
 }
 
 bool Cookie::verifyCookie(const std::string& token)
 {
-    Cookie::cookiesMutex.lock();
-    for(const Cookie& cookie : Cookie::cookies)
-    {
-        bool comp =  cookie.token == token;
-
-        if(cookie.token == token && !cookie.isExpired())
-        {
-            Cookie::cookiesMutex.unlock();
+    std::lock_guard<std::mutex> l (cookiesMutex); 
+    for(std::shared_ptr<const Cookie> cookie : Cookie::cookies)
+    {        
+        if(cookie->token == token && !cookie->isExpired())
             return true;
-        }
     }
-    Cookie::cookiesMutex.unlock();
+ 
     return false;
 }
 
@@ -66,9 +67,9 @@ void Cookie::cookieCleaner()
     Cookie::cookiesMutex.lock();
     int end = 0;
 
-    for (std::vector<Cookie>::iterator it = Cookie::cookies.begin(); it != Cookie::cookies.end(); it++)
+    for (CookieIter_const it = Cookie::cookies.begin(); it != Cookie::cookies.end(); it++)
     {    
-        if(it->isExpired())
+        if(it->get()->isExpired())
             end += 1;
         else
             break;
@@ -76,37 +77,29 @@ void Cookie::cookieCleaner()
 
     if(end != 0)
         Cookie::cookies.erase(Cookie::cookies.begin(),Cookie::cookies.begin()+end);
-   
-    Cookie::cookiesMutex.unlock();
 }
 
 //Private
 std::string Cookie::generateToken()
 {    
     std::string token = "";
-    bool ready = false;
-
-    while (!ready)
+    
+    do
     {
         for(int i = 0; i < alphabet.size(); i++)
         {
             token += alphabet[distrubution(generator)];
         }
-        if(!Cookie::isCopy(token))
-        {
-            ready = true;
-        }
-        else
-            token = "";
-    }
+    }while(Cookie::isCopy(token));
+
     return token;
 }
 
 bool Cookie::isCopy(const std::string& token)
 {
-    for(const Cookie& cookie : Cookie::cookies)
+    for(std::shared_ptr<const Cookie> cookie: Cookie::cookies)
     {
-        if(cookie.token == token)
+        if(cookie->token == token)
             return true;
     }
 

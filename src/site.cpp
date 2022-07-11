@@ -70,7 +70,7 @@ void Site::auth(const crow::request& req, crow::response& resp)
     crow::multipart::message msg(req);
     if(msg.parts[0].body == this->password)
     {
-        resp.add_header("set-cookie", Cookie::generateCookie().toString());
+        resp.add_header("set-cookie", Cookie::generateCookie().lock()->toString());
         resp.end();
         return;
     }
