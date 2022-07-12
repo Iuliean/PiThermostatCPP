@@ -1,6 +1,7 @@
 #include "site.h"
 #include "sha/sha256.h"
 
+#include <string>
 #include <thread>
 #include <stdio.h>
 
@@ -15,13 +16,13 @@
 
 Site::Site(Controller* otherController)
 {
-    cntrl         = otherController;
+    cntrl               = otherController;
 
     class SHA256 hasher;
-    json j    = configFile.read();
-    port          = j["site"]["port"];
-    cleanInterval = j["site"]["cleanInterval"];
-    password      = hasher(j["site"]["password"]);
+    json j              = configFile.read();
+    port                = j["site"]["port"];
+    cleanInterval       = j["site"]["cleanInterval"];
+    password            = hasher(j["site"]["password"]);
     Cookie::lifetime    = j["site"]["cookieLifetime"];
 
     app.loglevel(crow::LogLevel::Info);
@@ -147,22 +148,26 @@ void Site::setParams(crow::request& req, crow::response& resp)
 void Site::getTemps(crow::request& req, crow::response& resp)
 {
     json returnJson;
-    const char* start = req.url_params.get("startDate");
-    const char* end   = req.url_params.get("endDate");
+    char* t1= req.url_params.get("startDate");
+    char* t2= req.url_params.get("endDate");
+
+    std::string start(t1 ? t1 : "");
+    std::string end(t2 ? t2 : "");
+
     
-    if(start == nullptr && end == nullptr)
+    if(start.empty()&& end.empty())
         db.getTemperaturesPast24h(returnJson);
     else
     {
-        if(start == nullptr)
+        if(start.empty())
             db.getTemperatures("1970-01-01", end, returnJson);
         else
         {
-            if(strcmp(start,"24h") == 0)
+            if(start == "24h")
                 db.getTemperaturesPast24h(returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getTemperatures(start, "now" ,returnJson);
                 else
                     db.getTemperatures(start, end, returnJson);
@@ -179,22 +184,24 @@ void Site::getTemps(crow::request& req, crow::response& resp)
 void Site::getAverage(crow::request& req, crow::response& resp)
 {
     json returnJson;
-    const char* start = req.url_params.get("startDate");
-    const char* end   = req.url_params.get("endDate");
+    char* t1= req.url_params.get("startDate");
+    char* t2= req.url_params.get("endDate");
 
-    if(start == nullptr && end == nullptr)
+    std::string start(t1 ? t1 : "");    
+    std::string end(t2 ? t2 : "");
+    if(start.empty()  && end.empty())
         db.getAverageTemp(returnJson);
     else
     {
-        if(start == nullptr)
+        if(start.empty())
             db.getAverageTemp("1970-01-01", end, returnJson);
         else
         {
-            if(strcmp(start,"24h") == 0)
+            if(start == "24h")
                 db.getAverageTempPast24h(returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getAverageTemp(start, "now" ,returnJson);
                 else
                     db.getAverageTemp(start, end, returnJson);
@@ -212,30 +219,30 @@ void Site::getStates(crow::request& req, crow::response& resp)
 {
     json returnJson;
 
-    const char* state = req.url_params.get("state");
-    const char* start = req.url_params.get("startDate");
-    const char* end   = req.url_params.get("endDate");
+    char* t1= req.url_params.get("state");
+    char* t2= req.url_params.get("startDate");
+    char* t3= req.url_params.get("endDate");
 
-    if(state == nullptr)
-        state = "on";
+    std::string state(t1 ? t1 : "on");
+    std::string start(t2 ? t2 : "");
+    std::string end(t3 ? t3 : "");
 
-
-    if(strcmp(state, "on") == 0)
+    if(state == "on")
     {
-       if(start == nullptr)
+       if(start.empty())
        {
-            if(end == nullptr)
+            if(end.empty())
                 db.getStates24h("1", returnJson);
             else
                 db.getStates("1", "1970-01-01", end, returnJson);
        }
        else
        {
-            if(strcmp(start, "24h") == 0)
+            if(start == "24h")
                 db.getStates24h("1", returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getStates("1", start, "now", returnJson);
                 else
                     db.getStates("1", start, end, returnJson);
@@ -244,20 +251,20 @@ void Site::getStates(crow::request& req, crow::response& resp)
     }
     else
     {
-       if(start == nullptr)
+       if(start.empty())
        {
-            if(end == nullptr)
+            if(end.empty())
                 db.getStates24h("0", returnJson);
             else
                 db.getStates("0", "1970-01-01", end, returnJson);
        }
        else
        {
-            if(strcmp(start, "24h") == 0)
+            if(start == "24h")
                 db.getStates24h("0", returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getStates("0", start, "now", returnJson);
                 else
                     db.getStates("0", start, end, returnJson);
@@ -275,30 +282,30 @@ void Site::getAverageStateTime(crow::request& req, crow::response& resp)
 {
     json returnJson;
     
-    const char* state = req.url_params.get("state");
-    const char* start = req.url_params.get("startDate");
-    const char* end   = req.url_params.get("endDate");
+    char* t1= req.url_params.get("state");
+    char* t2= req.url_params.get("startDate");
+    char* t3= req.url_params.get("endDate");
 
-    if(state == nullptr)
-        state = "on";
+    std::string state(t1 ? t1 : "on");
+    std::string start(t2 ? t2 : "");
+    std::string end(t3 ? t3 : "");
 
-
-    if(strcmp(state, "on") == 0)
+    if(state == "on")
     {
-       if(start == nullptr)
+       if(start.empty())
        {
-            if(end == nullptr)
+            if(end.empty())
                 db.getAverageStateTimePast24h("1", returnJson);
             else
                 db.getAverageStateTime("1", "1970-01-01", end, returnJson);
        }
        else
        {
-            if(strcmp(start, "24h") == 0)
+            if(start == "24h")
                 db.getAverageStateTimePast24h("1", returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getAverageStateTime("1", start, "now", returnJson);
                 else
                     db.getAverageStateTime("1", start, end, returnJson);
@@ -307,20 +314,20 @@ void Site::getAverageStateTime(crow::request& req, crow::response& resp)
     }
     else
     {
-       if(start == nullptr)
+       if(start.empty())
        {
-            if(end == nullptr)
+            if(end.empty())
                 db.getAverageStateTimePast24h("0", returnJson);
             else
                 db.getAverageStateTime("0", "1970-01-01", end, returnJson);
        }
        else
        {
-            if(strcmp(start, "24h") == 0)
+            if(start == "24h")
                 db.getAverageStateTimePast24h("0", returnJson);
             else
             {
-                if(end == nullptr)
+                if(end.empty())
                     db.getAverageStateTime("0", start, "now", returnJson);
                 else
                     db.getAverageStateTime("0", start, end, returnJson);

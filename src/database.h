@@ -19,7 +19,7 @@ public:
     {
         char* msg           = nullptr;
         std::string query   = "INSERT INTO Temperatures (value, date, time) VALUES (" + std::to_string(value)+",DATE(),TIME());";
-        sqlite3_exec(this->connection, query.c_str(), nullptr, nullptr, &msg);
+        sqlite3_exec(connection, query.c_str(), nullptr, nullptr, &msg);
 
         if(msg)
             CROW_LOG_ERROR << "[DataBase]:" << msg;
@@ -30,7 +30,7 @@ public:
     {
         char* msg           = nullptr;
         std::string query   = "INSERT INTO States (state, date, time, duration) VALUES ("+ std::to_string(state)+", DATE(), TIME(),"+ std::to_string(duration)+");";
-        sqlite3_exec(this->connection, query.c_str(), nullptr, nullptr, &msg);
+        sqlite3_exec(connection, query.c_str(), nullptr, nullptr, &msg);
 
         if(msg)
             CROW_LOG_ERROR << "[DataBase]:" << msg;
@@ -40,62 +40,62 @@ public:
 
     inline void getTemperatures(const std::string& start, const std::string& end, json& j)
     {
-        this->queryDB("SELECT * FROM Temperatures WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'"+ end + "\');", j);
+        queryDB("SELECT * FROM Temperatures WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'"+ end + "\');", j);
     }
 
     inline void getTemperaturesPast24h(json& j)
     {
-        this->queryDB("SELECT * FROM Temperatures WHERE DATE('now', '-1 days') < DATE(date || time);", j);
+        queryDB("SELECT * FROM Temperatures WHERE DATE('now', '-1 days') < DATE(date || time);", j);
     }
 
     inline void getAverageTemp(json& j)
     {
-        this->queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE date = DATE('now');", j);
+        queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE date = DATE('now');", j);
     }
 
     inline void getAverageTempPast24h(json& j)
     {
-        this->queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE DATE('now', '-1 days') < DATE(date || time);", j);
+        queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE DATE('now', '-1 days') < DATE(date || time);", j);
     }
 
     inline void getAverageTemp(const std::string& start, const std::string& end, json& j)
     {
-        this->queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'"+ end + "\');", j);
+        queryDB("SELECT AVG(value) AS averageTemp FROM Temperatures WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'"+ end + "\');", j);
     }
 
     inline void getStates(const std::string& state, const std::string& start, const std::string& end, json& j)
     {
-        this->queryDB("SELECT * FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state ="+ state + ";", j);
+        queryDB("SELECT * FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state ="+ state + ";", j);
     }
 
     inline void getStates24h(const std::string& state, json& j)
     {
-        this->queryDB("SELECT * FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
+        queryDB("SELECT * FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
     }
 
     inline void getAverageStateTime(const std::string& state, json& j)
     {
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE date = DATE('now') AND state =" + state + ";", j);
+        queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE date = DATE('now') AND state =" + state + ";", j);
     }
 
     inline void getAverageStateTimePast24h(const std::string& state, json& j)
     { 
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
+        queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE DATE('now', '-1 days') < DATE(date || time) AND state =" + state + ";", j);
     }
 
     inline void getAverageStateTime(const std::string& state, const std::string& start, const std::string& end, json& j)
     {
-        this->queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state =" + state +";", j);       
+        queryDB("SELECT AVG(duration) AS averageOnTime FROM States WHERE julianday(date) >= julianday(\'" + start + "\') AND julianday(date) <= julianday(\'" + end + "\') AND state =" + state +";", j);       
     }
 private:
     sqlite3* connection;
     
     DataBase()
     {
-        sqlite3_open("data.db", &this->connection);
+        sqlite3_open("data.db", &connection);
 
         char* msg = nullptr;
-        sqlite3_exec(this->connection, "CREATE TABLE IF NOT EXISTS Temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);", nullptr, nullptr, &msg);
+        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS Temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);", nullptr, nullptr, &msg);
 
         if(msg)
         {
@@ -103,7 +103,7 @@ private:
             sqlite3_free(msg);
         }
 
-        sqlite3_exec(this->connection, "CREATE TABLE IF NOT EXISTS States (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);", nullptr, nullptr, &msg);
+        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS States (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);", nullptr, nullptr, &msg);
         
         if(msg)
         {
@@ -118,7 +118,7 @@ private:
     {
         sqlite3_stmt* statement;
         const char* tail; 
-        int error = sqlite3_prepare_v2(this->connection, query.c_str(), query.size()+1, &statement, &tail);
+        int error = sqlite3_prepare_v2(connection, query.c_str(), query.size()+1, &statement, &tail);
         if(error != SQLITE_OK)
         {
             CROW_LOG_ERROR << "[DataBase]:" << tail << " Error code: " << error;
@@ -151,7 +151,7 @@ private:
                 {
                     CROW_LOG_ERROR << "[DataBase]: SQLITE_MISUSE";
                     sqlite3_finalize(statement);
-                    out["error"] = "SQLITE_ERROR";
+                    out["error"] = "SQLITE_MISUSE";
                     return;
                 }
             case SQLITE_ROW:
