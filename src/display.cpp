@@ -24,19 +24,19 @@ static const std::map<char, std::vector<char>> numberConstructor = {
 void Display::run()
 {
     bool decimalPoint;
-    this->pinsInit();
+    pinsInit();
 
     while(true)
     {
         decimalPoint = false;
         int posShift = 0;
 
-        std::string temperature = this->number;
+        std::string temperature = number;
         for(int i = temperature.length() - 1; i > -1; i--)
         {
             const char& digit = temperature[i];
 
-            this->clearSegments();
+            clearSegments();
             if(digit == '.')
             {
                 decimalPoint = true;
@@ -45,18 +45,18 @@ void Display::run()
             
             for(const char& segment : numberConstructor.at(digit))
             {
-                digitalWrite(this->segments[std::string(1,segment)], HIGH);
+                digitalWrite(segments[std::string(1,segment)], HIGH);
             }
 
             if(decimalPoint)
             {
                 decimalPoint = false;
-                digitalWrite(this->segments["DP"], HIGH);
+                digitalWrite(segments["DP"], HIGH);
             }
 
-            digitalWrite(this->digitPins[posShift], LOW);
-            delay(this->refreshRate.load());
-            digitalWrite(this->digitPins[posShift], HIGH);
+            digitalWrite(digitPins[posShift], LOW);
+            delay(refreshRate.load());
+            digitalWrite(digitPins[posShift], HIGH);
             
             posShift++;
 
@@ -68,18 +68,18 @@ void Display::run()
 void Display::setSegments(const json& segs)
 {
     for(const unsigned int& i : segs["digits"])
-        this->digitPins.push_back(i);
+        digitPins.push_back(i);
 
-    this->segments["A"]     = segs["A"];
-    this->segments["B"]     = segs["B"];
-    this->segments["C"]     = segs["C"];
-    this->segments["D"]     = segs["D"];
-    this->segments["E"]     = segs["E"];
-    this->segments["F"]     = segs["F"];
-    this->segments["G"]     = segs["G"];
-    this->segments["DP"]    = segs["DP"];
+    segments["A"]     = segs["A"];
+    segments["B"]     = segs["B"];
+    segments["C"]     = segs["C"];
+    segments["D"]     = segs["D"];
+    segments["E"]     = segs["E"];
+    segments["F"]     = segs["F"];
+    segments["G"]     = segs["G"];
+    segments["DP"]    = segs["DP"];
 
-    for(auto it = this->segments.begin(); it != this->segments.end(); it++)
+    for(auto it = segments.begin(); it != segments.end(); it++)
     {
         LOG_DISPLAY_INFO << "Segment "<<it->first <<" set to pin " <<it->second;
     }
@@ -88,7 +88,7 @@ void Display::setSegments(const json& segs)
 //Private
 void Display::pinsInit()const
 {
-    for(const int& pin : this->digitPins)
+    for(const int& pin : digitPins)
     {
         pinMode(pin, OUTPUT);
         digitalWrite(pin, HIGH);
@@ -96,7 +96,7 @@ void Display::pinsInit()const
         LOG_DISPLAY_INFO << "Initializing digit pin: " << pin << " and settings the output LOW";
     }
 
-    for(auto& it : this->segments)
+    for(auto& it : segments)
     {
         pinMode(it.second, OUTPUT);
         digitalWrite(it.second,LOW);
@@ -107,7 +107,7 @@ void Display::pinsInit()const
 
 void Display::clearSegments()const
 {
-    for(auto& it : this->segments)
+    for(auto& it : segments)
     {
         digitalWrite(it.second, LOW);
     }

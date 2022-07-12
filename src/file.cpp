@@ -4,12 +4,12 @@
 
 File::File(const std::string& newFileName)
 {
-	this->fileName = newFileName;
+	fileName = newFileName;
 }
 
 json File::read()
 {
-	std::ifstream file(this->fileName);
+	std::ifstream file(fileName);
 	json out;
 
 	file >> out;
@@ -18,7 +18,7 @@ json File::read()
 
 void File::write(const json& content)
 {
-	std::ofstream file(this->fileName);
+	std::ofstream file(fileName);
 
 	file << content;
 }

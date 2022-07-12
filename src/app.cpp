@@ -8,23 +8,23 @@
 App::App()
 {
 
-    this->ctrl = new Controller;
-    this->site = new Site(this->ctrl);
+    ctrl = new Controller;
+    site = new Site(this->ctrl);
 }
 
 App::~App()
 {
-    delete this->site;
-    delete this->ctrl;
+    delete site;
+    delete ctrl;
 }
 
 void App::run()
 {  
     LOG_APP_INFO << "Starting controller thread";
-    std::thread controllerThread(&Controller::run, this->ctrl);
+    std::thread controllerThread(&Controller::run, ctrl);
 
     LOG_APP_INFO <<"Starting site thread";
-    std::thread siteThread(&Site::run, this->site);
+    std::thread siteThread(&Site::run, site);
 
     siteThread.join();
     controllerThread.join();

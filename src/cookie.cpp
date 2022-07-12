@@ -33,7 +33,7 @@ bool Cookie::isExpired()const
 {
     std::lock_guard<std::mutex> l(m_objectMutex);
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration<float>(now - this->timeOfCreation).count() > Cookie::lifetime ? true : false;
+    return std::chrono::duration<float>(now - timeOfCreation).count() > Cookie::lifetime ? true : false;
 }
 
 std::string Cookie::toString()const

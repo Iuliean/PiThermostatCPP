@@ -4,24 +4,24 @@
 #include <thread>
 #include <stdio.h>
 
-#define ROUTE(url, method, func) CROW_ROUTE(this->app, url)\
+#define ROUTE(url, method, func) CROW_ROUTE(app, url)\
                                 .methods(method)\
-                                ([this](crow::request& req, crow::response& res){this->func(req,res);})
+                                ([this](crow::request& req, crow::response& res){func(req,res);})
 
-#define ROUTE_MIDDLEWARES(url, method, middleware, func) CROW_ROUTE(this->app, url)\
+#define ROUTE_MIDDLEWARES(url, method, middleware, func) CROW_ROUTE(app, url)\
                                                         .methods(method)\
-                                                        .CROW_MIDDLEWARES(this->app, middleware)\
-                                                        ([this](crow::request& req, crow::response& res){this->func(req,res);})
+                                                        .CROW_MIDDLEWARES(app, middleware)\
+                                                        ([this](crow::request& req, crow::response& res){func(req,res);})
 
 Site::Site(Controller* otherController)
 {
-    this->cntrl         = otherController;
+    cntrl         = otherController;
 
     class SHA256 hasher;
     json j    = configFile.read();
-    this->port          = j["site"]["port"];
-    this->cleanInterval = j["site"]["cleanInterval"];
-    this->password      = hasher(j["site"]["password"]);
+    port          = j["site"]["port"];
+    cleanInterval = j["site"]["cleanInterval"];
+    password      = hasher(j["site"]["password"]);
     Cookie::lifetime    = j["site"]["cookieLifetime"];
 
     app.loglevel(crow::LogLevel::Info);
@@ -52,14 +52,14 @@ void Site::run()
     std::thread cookieCleaner([this](){
         while(true)
         {
-            CROW_LOG_INFO << "Cookie cleaner sleeping for " << this->cleanInterval << "secs";
-            std::this_thread::sleep_for(std::chrono::seconds(this->cleanInterval));
+            CROW_LOG_INFO << "Cookie cleaner sleeping for " << cleanInterval << "secs";
+            std::this_thread::sleep_for(std::chrono::seconds(cleanInterval));
             CROW_LOG_INFO << "Cleaning cookies..."; 
             Cookie::cookieCleaner();
         }
     });
     app.signal_clear();
-    app.port(this->port).multithreaded().run();
+    app.port(port).multithreaded().run();
 }
 
 //Private
@@ -68,7 +68,7 @@ void Site::auth(const crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Login Attempt";
     crow::multipart::message msg(req);
-    if(msg.parts[0].body == this->password)
+    if(msg.parts[0].body == password)
     {
         resp.add_header("set-cookie", Cookie::generateCookie().lock()->toString());
         resp.end();
@@ -97,7 +97,7 @@ void Site::dashboard(crow::request& req, crow::response& resp)
     CROW_LOG_INFO << "Serving Dashboard page";
 
     crow::mustache::context pageContext;
-    const Parameters params     = this->cntrl->getParameters();
+    const Parameters params     = cntrl->getParameters();
     
     pageContext["minTemp"]      = params.minTemp;
     pageContext["maxTemp"]      = params.maxTemp;
@@ -113,7 +113,7 @@ void Site::dashboard(crow::request& req, crow::response& resp)
 void Site::getParams(crow::request& req, crow::response& resp)
 {
     json returnJson;
-    const Parameters params     = this->cntrl->getParameters();
+    const Parameters params     = cntrl->getParameters();
 
     returnJson["minTemp"]       = params.minTemp;
     returnJson["maxTemp"]       = params.maxTemp;
@@ -131,13 +131,13 @@ void Site::setParams(crow::request& req, crow::response& resp)
 {
     const json newSettings = json::parse(req.body);
     if(newSettings["minTemp"] != nullptr && newSettings["maxTemp"] != nullptr)
-        this->cntrl->setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
+        cntrl->setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
     else
     {
         if(newSettings["minTemp"] == nullptr)
-            this->cntrl->setMaxTemp(newSettings["maxTemp"]);
+            cntrl->setMaxTemp(newSettings["maxTemp"]);
         else
-            this->cntrl->setMinTemp(newSettings["minTemp"]);
+            cntrl->setMinTemp(newSettings["minTemp"]);
     }
 
     resp.code = 200;
@@ -151,21 +151,21 @@ void Site::getTemps(crow::request& req, crow::response& resp)
     const char* end   = req.url_params.get("endDate");
     
     if(start == nullptr && end == nullptr)
-        this->db.getTemperaturesPast24h(returnJson);
+        db.getTemperaturesPast24h(returnJson);
     else
     {
         if(start == nullptr)
-            this->db.getTemperatures("1970-01-01", end, returnJson);
+            db.getTemperatures("1970-01-01", end, returnJson);
         else
         {
             if(strcmp(start,"24h") == 0)
-                this->db.getTemperaturesPast24h(returnJson);
+                db.getTemperaturesPast24h(returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getTemperatures(start, "now" ,returnJson);
+                    db.getTemperatures(start, "now" ,returnJson);
                 else
-                    this->db.getTemperatures(start, end, returnJson);
+                    db.getTemperatures(start, end, returnJson);
             }
         }
     }
@@ -183,21 +183,21 @@ void Site::getAverage(crow::request& req, crow::response& resp)
     const char* end   = req.url_params.get("endDate");
 
     if(start == nullptr && end == nullptr)
-        this->db.getAverageTemp(returnJson);
+        db.getAverageTemp(returnJson);
     else
     {
         if(start == nullptr)
-            this->db.getAverageTemp("1970-01-01", end, returnJson);
+            db.getAverageTemp("1970-01-01", end, returnJson);
         else
         {
             if(strcmp(start,"24h") == 0)
-                this->db.getAverageTempPast24h(returnJson);
+                db.getAverageTempPast24h(returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getAverageTemp(start, "now" ,returnJson);
+                    db.getAverageTemp(start, "now" ,returnJson);
                 else
-                    this->db.getAverageTemp(start, end, returnJson);
+                    db.getAverageTemp(start, end, returnJson);
             }
         }
     }    
@@ -225,20 +225,20 @@ void Site::getStates(crow::request& req, crow::response& resp)
        if(start == nullptr)
        {
             if(end == nullptr)
-                this->db.getStates24h("1", returnJson);
+                db.getStates24h("1", returnJson);
             else
-                this->db.getStates("1", "1970-01-01", end, returnJson);
+                db.getStates("1", "1970-01-01", end, returnJson);
        }
        else
        {
             if(strcmp(start, "24h") == 0)
-                this->db.getStates24h("1", returnJson);
+                db.getStates24h("1", returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getStates("1", start, "now", returnJson);
+                    db.getStates("1", start, "now", returnJson);
                 else
-                    this->db.getStates("1", start, end, returnJson);
+                    db.getStates("1", start, end, returnJson);
             }
        }
     }
@@ -247,20 +247,20 @@ void Site::getStates(crow::request& req, crow::response& resp)
        if(start == nullptr)
        {
             if(end == nullptr)
-                this->db.getStates24h("0", returnJson);
+                db.getStates24h("0", returnJson);
             else
-                this->db.getStates("0", "1970-01-01", end, returnJson);
+                db.getStates("0", "1970-01-01", end, returnJson);
        }
        else
        {
             if(strcmp(start, "24h") == 0)
-                this->db.getStates24h("0", returnJson);
+                db.getStates24h("0", returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getStates("0", start, "now", returnJson);
+                    db.getStates("0", start, "now", returnJson);
                 else
-                    this->db.getStates("0", start, end, returnJson);
+                    db.getStates("0", start, end, returnJson);
             }
        }
     }
@@ -288,20 +288,20 @@ void Site::getAverageStateTime(crow::request& req, crow::response& resp)
        if(start == nullptr)
        {
             if(end == nullptr)
-                this->db.getAverageStateTimePast24h("1", returnJson);
+                db.getAverageStateTimePast24h("1", returnJson);
             else
-                this->db.getAverageStateTime("1", "1970-01-01", end, returnJson);
+                db.getAverageStateTime("1", "1970-01-01", end, returnJson);
        }
        else
        {
             if(strcmp(start, "24h") == 0)
-                this->db.getAverageStateTimePast24h("1", returnJson);
+                db.getAverageStateTimePast24h("1", returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getAverageStateTime("1", start, "now", returnJson);
+                    db.getAverageStateTime("1", start, "now", returnJson);
                 else
-                    this->db.getAverageStateTime("1", start, end, returnJson);
+                    db.getAverageStateTime("1", start, end, returnJson);
             }
        }
     }
@@ -310,20 +310,20 @@ void Site::getAverageStateTime(crow::request& req, crow::response& resp)
        if(start == nullptr)
        {
             if(end == nullptr)
-                this->db.getAverageStateTimePast24h("0", returnJson);
+                db.getAverageStateTimePast24h("0", returnJson);
             else
-                this->db.getAverageStateTime("0", "1970-01-01", end, returnJson);
+                db.getAverageStateTime("0", "1970-01-01", end, returnJson);
        }
        else
        {
             if(strcmp(start, "24h") == 0)
-                this->db.getAverageStateTimePast24h("0", returnJson);
+                db.getAverageStateTimePast24h("0", returnJson);
             else
             {
                 if(end == nullptr)
-                    this->db.getAverageStateTime("0", start, "now", returnJson);
+                    db.getAverageStateTime("0", start, "now", returnJson);
                 else
-                    this->db.getAverageStateTime("0", start, end, returnJson);
+                    db.getAverageStateTime("0", start, end, returnJson);
             }
        }
     }
@@ -339,7 +339,7 @@ void Site::shutdown(crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Shutting down";
 
-    this->cntrl->toDisk();
+    cntrl->toDisk();
     system("sudo shutdown +1");
 
     resp.code = 200;

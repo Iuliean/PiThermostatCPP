@@ -5,6 +5,7 @@
 #include "database.h"
 
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <iostream>
 #include <fstream>
@@ -19,47 +20,47 @@ Controller::Controller()
 {
 	wiringPiSetupGpio();
 	
-	json j = this->parametersFile.read();
+	json j = parametersFile.read();
 
-	this->minTemp		= j["minTemp"];
-	this->maxTemp 		= j["maxTemp"];
+	minTemp		= j["minTemp"];
+	maxTemp 	= j["maxTemp"];
 
-	j = this->config.read();
+	j = config.read()["controller"];
 
-	this->numOfReads	= j["controller"]["numOfReads"];
-	this->readDelay		= j["controller"]["readDelay"];
-	this->saveInterval	= j["controller"]["saveInterval"];
-	this->calibration 	= j["controller"]["calibration"];
-	this->driverFile    = j["controller"]["driverFile"];
+	numOfReads		= j["numOfReads"];
+	readDelay		= j["readDelay"];
+	saveInterval	= j["saveInterval"];
+	calibration 	= j["calibration"];
+	driverFile    	= j["driverFile"];
 
-	if (this->numOfReads <= 0)
+	if (numOfReads <= 0)
 	{
 		LOG_CONTROLLER_WARNING << "Can't have numOfReads <= 0. Setting default of 4";
-		this->numOfReads = 4;
+		numOfReads = 4;
 	}
-	if(this->readDelay < 0)
+	if(readDelay < 0)
 	{
 		LOG_CONTROLLER_WARNING << "Can't have negative delay. Setting default of 2000";
-		this->readDelay = 2000;
+		readDelay = 2000;
 	}
 
-	this->rel.setPin(j["controller"]["relayPin"]);
-	this->rel.setup();
-	this->disp.setSegments(j["controller"]["display"]);
-	this->disp.setRefreshRate(j["controller"]["display"]["refreshRate"]);
+	rel.setPin(j["relayPin"]);
+	rel.setup();
+	disp.setSegments(j["display"]);
+	disp.setRefreshRate(j["display"]["refreshRate"]);
 
 
 }
 
 void Controller::run()
 {
-	std::thread displayThread(&Display::run, &this->disp);
+	std::thread displayThread(&Display::run, &disp);
 	std::thread tempSaveRoutine ([this](){
 		DataBase& db = DataBase::getInstance();
 		while(true)
 		{
 			std::this_thread::sleep_for(std::chrono::minutes(10));
-			db.insertTemp(this->getParameters().temp);
+			db.insertTemp(getParameters().temp);
 		}
 	});
 
@@ -70,14 +71,14 @@ void Controller::run()
 
 	while(true)
 	{
-		this->checkTemp();
-		Parameters params = this->getParameters();
-		this->disp.show(params.temp);
+		checkTemp();
+		Parameters params = getParameters();
+		disp.show(params.temp);
 
-		if (params.temp > params.maxTemp && this->rel.isOn())
+		if (params.temp > params.maxTemp && rel.isOn())
 		{
-			this->rel.off();
-			LOG_CONTROLLER_INFO << "Current temp is: " << this->temp << " switch turned off";
+			rel.off();
+			LOG_CONTROLLER_INFO << "Current temp is: " << temp << " switch turned off";
 
 			db.insertState(
 				true,
@@ -86,10 +87,10 @@ void Controller::run()
 
 			stateTime = std::chrono::high_resolution_clock::now();
 		}
-		else if (params.temp < params.minTemp && !this->rel.isOn())
+		else if (params.temp < params.minTemp && !rel.isOn())
 		{
-			this->rel.on();
-			LOG_CONTROLLER_INFO << "Current temp is:" << this->temp << " switch turned on";
+			rel.on();
+			LOG_CONTROLLER_INFO << "Current temp is:" << temp << " switch turned on";
 
 			db.insertState(
 				false,
@@ -102,7 +103,7 @@ void Controller::run()
 		if(std::chrono::duration<float>(std::chrono::high_resolution_clock::now()- lastSave).count() > saveInterval)
 		{
 			lastSave = std::chrono::high_resolution_clock::now();
-			this->toDisk();
+			toDisk();
 		}
 	}
 }
@@ -110,50 +111,47 @@ void Controller::run()
 Parameters Controller::getParameters()
 {
 	Parameters out;
+	std::lock_guard<std::mutex> l(parametersMutex);
 	
-	this->parametersMutex.lock();
-	
-	out.temp		= this->temp;
-	out.minTemp		= this->minTemp;
-	out.maxTemp		= this->maxTemp;
-	out.state		= this->getState();
-	
-	this->parametersMutex.unlock();
+	out.temp		= temp;
+	out.minTemp		= minTemp;
+	out.maxTemp		= maxTemp;
+	out.state		= getState();
 
 	return out;
 }
 
 bool Controller::getState()const
 {
-	return this->rel.isOn();
+	return rel.isOn();
 }
 
 void Controller::setParameters(float newMinTemp, float newMaxTemp)
 {
-	this->parametersMutex.lock();
+	parametersMutex.lock();
 	
-	this->minTemp		= newMinTemp;
-	this->maxTemp 		= newMaxTemp;
+	minTemp		= newMinTemp;
+	maxTemp 		= newMaxTemp;
 
-	this->parametersMutex.unlock();
+	parametersMutex.unlock();
 }
 
 void Controller::setMinTemp(float newMinTemp)
 {
-	this->parametersMutex.lock();
+	parametersMutex.lock();
 
-	this->minTemp 		= newMinTemp;
+	minTemp 		= newMinTemp;
 
-	this->parametersMutex.unlock();
+	parametersMutex.unlock();
 }
 
 void Controller::setMaxTemp(float newMaxTemp)
 {
-	this->parametersMutex.lock();
+	parametersMutex.lock();
 
-	this->maxTemp 		= newMaxTemp;
+	maxTemp 		= newMaxTemp;
 
-	this->parametersMutex.unlock();
+	parametersMutex.unlock();
 }
 
 //Private funcs
@@ -163,27 +161,27 @@ void Controller::toDisk()
 	LOG_CONTROLLER_INFO << "Writing parameters to disk >> parameters.json";
 	json j;
 
-	j["minTemp"]		= this->minTemp;
-	j["maxTemp"]		= this->maxTemp;
+	j["minTemp"]		= minTemp;
+	j["maxTemp"]		= maxTemp;
 
-	this->parametersFile.write(j);
+	parametersFile.write(j);
 }
 
 void Controller::checkTemp()
 {
 	int sum = 0;
 
-	for (int i = 0; i < this->numOfReads; i++)
+	for (int i = 0; i < numOfReads; i++)
 	{
-		std::ifstream sensorFile (this->driverFile);
+		std::ifstream sensorFile (driverFile);
 		int t;
 		sensorFile >> t;
 		sum += t;
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(this->readDelay/this->numOfReads));
+		std::this_thread::sleep_for(std::chrono::milliseconds(readDelay/numOfReads));
 	}
 
-	sum /= 100 * this->numOfReads;
+	sum /= 100 * numOfReads;
 
-	temp = ((float)sum / 10) + this->calibration;
+	temp = ((float)sum / 10) + calibration;
 }
