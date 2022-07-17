@@ -1,5 +1,0 @@
--std=c++17 
--lpthread 
--lwiringPi 
--lboost_system 
--ldl
