@@ -10,3 +10,5 @@ build/release
 build/debug
 release.txt
 debug.txt
+.cache
+compile_commands.json
