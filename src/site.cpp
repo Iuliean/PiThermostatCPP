@@ -26,7 +26,12 @@ Site::Site(Controller* otherController)
     Cookie::lifetime    = j["site"]["cookieLifetime"];
 
     app.loglevel(crow::LogLevel::Info);
-
+#ifdef CROW_ENABLE_SSL
+    if(j["site"]["ssl_files"][0] != nullptr && j["site"]["ssl_files"][1] != nullptr)
+    {
+        app.ssl_file(j["site"]["ssl_files"][0], j["site"]["ssl_files"][1]);
+    }
+#endif
     ROUTE_MIDDLEWARES("/", crow::HTTPMethod::GET, Authentificator, loginPage);
 
     ROUTE("/auth", crow::HTTPMethod::POST, auth);

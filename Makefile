@@ -1,7 +1,11 @@
 CXX=g++
 COMPILER_PREFIX=
-FLAGS=-L$(OUTPUTDIR) -std=c++17 -lpthread -lwiringPi -lboost_system -ldl
-export FLAGS
+FLAGS=-L$(OUTPUTDIR) -std=c++17 -lpthread -lwiringPi -lboost_system -ldl -lssl -latomic -lcrypto 
+DEFINES=
+
+ifdef SSL
+DEFINES+=-DCROW_ENABLE_SSL
+endif
 
 ifndef RELEASE
 DEBUG=-g3
@@ -15,6 +19,8 @@ OUTPUTDIR ?=$(shell pwd)/intermediates/release
 FINALOUTPUT=build/release
 endif
 
+export DEFINES
+export FLAGS
 export DEBUG
 export OUTPUTDIR
 export COMPILER_PREFIX

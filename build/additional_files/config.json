@@ -3,7 +3,8 @@
         "port": 18080,
         "password": "centrala",
         "cookieLifetime": 60,
-        "cleanInterval": 3600
+        "cleanInterval": 3600,
+        "ssl_files":["cert.pem", "privkey.pem"]
     },
 
     "controller":{

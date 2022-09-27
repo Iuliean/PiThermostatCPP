@@ -11,7 +11,7 @@ OJBFILES=$(addprefix $(OUTPUTDIR)/, $(FILES:.cpp=.o))
 all:$(OJBFILES)
 
 $(OUTPUTDIR)/%.o: %.cpp
-	$(COMPILER_PREFIX)$(CXX) -c -o $@ $< $(INCLUDES) $(DEBUG)
+	$(COMPILER_PREFIX)$(CXX) -c -o $@ $< $(INCLUDES) $(DEBUG) $(DEFINES) 
 
 app.cpp:app.h
 controller.cpp:controller.h json_custom.h database.h
