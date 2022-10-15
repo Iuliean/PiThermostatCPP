@@ -76,7 +76,7 @@ void Site::auth(const crow::request& req, crow::response& resp)
     crow::multipart::message msg(req);
     if(msg.parts[0].body == password)
     {
-        resp.body = "{\n\t\"token\": \"" + Cookie::generateCookie().lock()->token + "\"\n}";
+        resp.body = "{\n\t\"token\": \"" + Cookie::generateCookie().lock()->token() + "\"\n}";
         resp.end();
         return;
     }

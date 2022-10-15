@@ -25,21 +25,21 @@ std::atomic<unsigned int> Cookie::lifetime;
 Cookie::Cookie()
 {
     std::lock_guard<std::mutex> l(m_objectMutex);
-    token = Cookie::generateToken();
-    timeOfCreation = std::chrono::high_resolution_clock::now();
+    m_token = Cookie::generateToken();
+    m_timeOfCreation = std::chrono::high_resolution_clock::now();
 }
 
 bool Cookie::isExpired()const
 {
     std::lock_guard<std::mutex> l(m_objectMutex);
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration<float>(now - timeOfCreation).count() > Cookie::lifetime ? true : false;
+    return std::chrono::duration<float>(now - m_timeOfCreation).count() > Cookie::lifetime ? true : false;
 }
 
 std::string Cookie::toString()const
 {
     std::lock_guard<std::mutex> l (m_objectMutex);
-    return "authToken=" + token + "; Max-Age=" + std::to_string(Cookie::lifetime);
+    return "authToken=" + m_token + "; Max-Age=" + std::to_string(Cookie::lifetime);
 }
 
 std::weak_ptr<const Cookie> Cookie::generateCookie()
@@ -55,7 +55,7 @@ bool Cookie::verifyCookie(const std::string& token)
     std::lock_guard<std::mutex> l (cookiesMutex); 
     for(std::shared_ptr<const Cookie> cookie : Cookie::cookies)
     {        
-        if(cookie->token == token && !cookie->isExpired())
+        if(cookie->token() == token && !cookie->isExpired())
             return true;
     }
  
@@ -64,7 +64,7 @@ bool Cookie::verifyCookie(const std::string& token)
 
 void Cookie::cookieCleaner()
 {
-    Cookie::cookiesMutex.lock();
+    std::lock_guard<std::mutex> l(cookiesMutex);
     int end = 0;
 
     for (CookieIter_const it = Cookie::cookies.begin(); it != Cookie::cookies.end(); it++)
@@ -99,7 +99,7 @@ bool Cookie::isCopy(const std::string& token)
 {
     for(std::shared_ptr<const Cookie> cookie: Cookie::cookies)
     {
-        if(cookie->token == token)
+        if(cookie->token() == token)
             return true;
     }
 
