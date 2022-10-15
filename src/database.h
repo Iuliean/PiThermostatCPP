@@ -116,6 +116,7 @@ private:
 
     void queryDB(const std::string& query, json& out)
     {
+        out["status"] = 0;
         sqlite3_stmt* statement;
         const char* tail; 
         int error = sqlite3_prepare_v2(connection, query.c_str(), query.size()+1, &statement, &tail);
@@ -123,7 +124,7 @@ private:
         {
             CROW_LOG_ERROR << "[DataBase]:" << tail << " Error code: " << error;
             sqlite3_finalize(statement);
-            out["error"] = error;
+            out["status"] = "Database error: " + std::to_string(error);
             return;
         }
         
@@ -137,21 +138,21 @@ private:
                 {
                     CROW_LOG_ERROR << "[DataBase]: SQLITE_BUSY";
                     sqlite3_finalize(statement);
-                    out["error"] = "SQLITE_BUSY";
+                    out["status"] = "SQLITE_BUSY";
                     return;
                 }
             case SQLITE_ERROR:
                 {
                     CROW_LOG_ERROR << "[DataBase]: SQLITE_ERROR";
                     sqlite3_finalize(statement);
-                    out["error"] = "SQLITE_ERROR";
+                    out["status"] = "SQLITE_ERROR";
                     return;
                 }
             case SQLITE_MISUSE:
                 {
                     CROW_LOG_ERROR << "[DataBase]: SQLITE_MISUSE";
                     sqlite3_finalize(statement);
-                    out["error"] = "SQLITE_MISUSE";
+                    out["status"] = "SQLITE_MISUSE";
                     return;
                 }
             case SQLITE_ROW:
@@ -163,17 +164,17 @@ private:
                         {
                             case SQLITE_FLOAT:
                             {
-                               out[entryNum][sqlite3_column_name(statement, i)] = sqlite3_column_double(statement, i);
+                               out["data"][entryNum][sqlite3_column_name(statement, i)] = sqlite3_column_double(statement, i);
                                break;
                             }
                             case SQLITE_INTEGER:
                             {
-                                out[entryNum][sqlite3_column_name(statement, i)] = sqlite3_column_int(statement, i);
+                                out["data"][entryNum][sqlite3_column_name(statement, i)] = sqlite3_column_int(statement, i);
                                 break;
                             }
                             case SQLITE_TEXT:
                             {
-                                out[entryNum][sqlite3_column_name(statement, i)] = (const char*)sqlite3_column_text(statement, i);
+                                out["data"][entryNum][sqlite3_column_name(statement, i)] = (const char*)sqlite3_column_text(statement, i);
                             }
 
                         }                   
@@ -184,7 +185,7 @@ private:
                 {
                     CROW_LOG_ERROR << "[DataBase]: Error code:" << result;
                     sqlite3_finalize(statement);
-                    out["error"] = result;
+                    out["status"] = "Unhandeled error " + std::to_string(result);
                     return;
                 }
             }

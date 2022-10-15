@@ -1,5 +1,6 @@
 #pragma once
 #include "crow.h"
+#include "crow/logging.h"
 #include "crow/middlewares/cookie_parser.h"
 #include "controller.h"
 #include "file.h"
@@ -13,11 +14,9 @@ struct Authentificator : crow::ILocalMiddleware
 {
     struct context{};
 
-    template<typename AllContext>
-    void before_handle(crow::request& req, crow::response& res, context& ctx, AllContext& all_ctx)
+    void before_handle(crow::request& req, crow::response& res, context& ctx)
     {
-        auto cookies = all_ctx.template get<crow::CookieParser>();
-        if(Cookie::verifyCookie(cookies.get_cookie("authToken")))
+        if(Cookie::verifyCookie(req.get_header_value("Authorization")))
         {
             if(req.url == "/")
             {

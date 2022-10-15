@@ -1,10 +1,10 @@
 #include "site.h"
+
 #include "sha/sha256.h"
 
 #include <string>
 #include <thread>
 #include <stdio.h>
-
 #define ROUTE(url, method, func) CROW_ROUTE(app, url)\
                                 .methods(method)\
                                 ([this](crow::request& req, crow::response& res){func(req,res);})
@@ -76,7 +76,7 @@ void Site::auth(const crow::request& req, crow::response& resp)
     crow::multipart::message msg(req);
     if(msg.parts[0].body == password)
     {
-        resp.add_header("set-cookie", Cookie::generateCookie().lock()->toString());
+        resp.body = "{\n\t\"token\": \"" + Cookie::generateCookie().lock()->token + "\"\n}";
         resp.end();
         return;
     }
@@ -120,14 +120,14 @@ void Site::getParams(crow::request& req, crow::response& resp)
 {
     json returnJson;
     const Parameters params     = cntrl->getParameters();
-
-    returnJson["minTemp"]       = params.minTemp;
-    returnJson["maxTemp"]       = params.maxTemp;
-    returnJson["temp"]          = params.temp;
-    returnJson["state"]         = params.state ? "ON" : "OFF";
-
     
-    resp.body = returnJson.dump(4);
+    returnJson["status"]                = 0;
+    returnJson["data"]["minTemp"]       = params.minTemp;
+    returnJson["data"]["maxTemp"]       = params.maxTemp;
+    returnJson["data"]["temp"]          = params.temp;
+    returnJson["data"]["state"]         = params.state ? "ON" : "OFF";
+
+    resp.body = returnJson.dump(4); 
     resp.code = 200;
     resp.set_header("Content-Type", "Application/json");
     resp.end();
@@ -153,6 +153,8 @@ void Site::setParams(crow::request& req, crow::response& resp)
 void Site::getTemps(crow::request& req, crow::response& resp)
 {
     json returnJson;
+    returnJson["data"] = json::array();
+    
     char* t1= req.url_params.get("startDate");
     char* t2= req.url_params.get("endDate");
 
@@ -179,9 +181,8 @@ void Site::getTemps(crow::request& req, crow::response& resp)
             }
         }
     }
-
-    resp.body = returnJson.dump(4);
-    resp.code = 200;
+    resp.body           = returnJson.dump(4);
+    resp.code           = 200;
     resp.set_header("Content-Type", "Application/json");
     resp.end();
 }
@@ -189,6 +190,8 @@ void Site::getTemps(crow::request& req, crow::response& resp)
 void Site::getAverage(crow::request& req, crow::response& resp)
 {
     json returnJson;
+    returnJson["data"] = json::array();
+
     char* t1= req.url_params.get("startDate");
     char* t2= req.url_params.get("endDate");
 
@@ -213,7 +216,6 @@ void Site::getAverage(crow::request& req, crow::response& resp)
             }
         }
     }    
-
     resp.body = returnJson.dump(4);
     resp.code = 200;
     resp.set_header("Content-Type", "Application/json");
@@ -223,6 +225,7 @@ void Site::getAverage(crow::request& req, crow::response& resp)
 void Site::getStates(crow::request& req, crow::response& resp)
 {
     json returnJson;
+    returnJson["data"] = json::array();
 
     char* t1= req.url_params.get("state");
     char* t2= req.url_params.get("startDate");
@@ -276,7 +279,6 @@ void Site::getStates(crow::request& req, crow::response& resp)
             }
        }
     }
-
     resp.body = returnJson.dump(4);
     resp.code = 200;
     resp.set_header("Content-Type", "Application/json");
@@ -286,6 +288,7 @@ void Site::getStates(crow::request& req, crow::response& resp)
 void Site::getAverageStateTime(crow::request& req, crow::response& resp)
 {
     json returnJson;
+    returnJson["data"] = json::array();
     
     char* t1= req.url_params.get("state");
     char* t2= req.url_params.get("startDate");
@@ -339,7 +342,6 @@ void Site::getAverageStateTime(crow::request& req, crow::response& resp)
             }
        }
     }
-
     resp.body = returnJson.dump(4);
     resp.code = 200;
     resp.set_header("Content-Type", "Application/json");
