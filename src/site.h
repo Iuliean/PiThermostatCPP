@@ -46,9 +46,9 @@ struct Authentificator : crow::ILocalMiddleware
 class Site
 {
 private:
-    DataBase&       db = DataBase::getInstance();
-    File            configFile{"config.json"};
-    Controller*     cntrl;
+    DataBase&       db;
+    File            configFile;
+    Controller&     cntrl;
 
     int             port;
     unsigned int    cleanInterval;
@@ -57,7 +57,7 @@ private:
 
     crow::App<crow::CookieParser, Authentificator> app;
 public:
-    Site(Controller* otherController);
+    Site(DataBase& db, Controller& controller);
 
     void run();
 

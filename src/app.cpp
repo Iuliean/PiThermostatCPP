@@ -6,10 +6,11 @@
 #define LOG_APP_INFO CROW_LOG_INFO <<"[APP]:"
 
 App::App()
+    : db()
 {
 
-    ctrl = new Controller;
-    site = new Site(this->ctrl);
+    ctrl = new Controller(db);
+    site = new Site(db, *ctrl);
 }
 
 App::~App()

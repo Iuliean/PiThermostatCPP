@@ -8,11 +8,33 @@
 class DataBase
 {
 public:
-    static DataBase& getInstance()
+    DataBase()
+        : connection(nullptr)
     {
-        static DataBase instance;
+        sqlite3_open("data.db", &connection);
 
-        return instance;
+        char* msg = nullptr;
+        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS Temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);", nullptr, nullptr, &msg);
+
+        if(msg)
+        {
+            CROW_LOG_ERROR << "[DataBase]:" << msg;
+            sqlite3_free(msg);
+        }
+
+        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS States (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);", nullptr, nullptr, &msg);
+        
+        if(msg)
+        {
+            CROW_LOG_ERROR << "[DataBase]:" << msg;
+            sqlite3_free(msg);
+        }
+    }
+
+    ~DataBase()
+    {
+        if (connection)
+            sqlite3_close(connection);
     }
     
     void insertTemp(float value)
@@ -90,30 +112,6 @@ public:
 private:
     sqlite3* connection;
     
-    DataBase()
-    {
-        sqlite3_open("data.db", &connection);
-
-        char* msg = nullptr;
-        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS Temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);", nullptr, nullptr, &msg);
-
-        if(msg)
-        {
-            CROW_LOG_ERROR << "[DataBase]:" << msg;
-            sqlite3_free(msg);
-        }
-
-        sqlite3_exec(connection, "CREATE TABLE IF NOT EXISTS States (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);", nullptr, nullptr, &msg);
-        
-        if(msg)
-        {
-            CROW_LOG_ERROR << "[DataBase]:" << msg;
-            sqlite3_free(msg);
-        }
-    }
-    DataBase(DataBase const& copy);
-    DataBase& operator=(DataBase const& copy);
-
     void queryDB(const std::string& query, json& out)
     {
         out["status"] = 0;

@@ -1,6 +1,7 @@
 #pragma once
 #include "site.h"
 #include "controller.h"
+#include "database.h"
 
 
 class App
@@ -8,6 +9,7 @@ class App
 private:
     Controller* ctrl;
     Site* site;
+    DataBase db;
 public:
 
     App();

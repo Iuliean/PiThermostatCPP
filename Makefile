@@ -1,6 +1,5 @@
 CXX=g++
-COMPILER_PREFIX=
-FLAGS=-L$(OUTPUTDIR) -std=c++17 -lpthread -lwiringPi -lboost_system -ldl -lssl -latomic -lcrypto 
+FLAGS=-L$(OUTPUTDIR) -std=c++17 -lpthread -lwiringPi -lboost_system -ldl -lssl -latomic -lcrypto
 DEFINES=
 
 ifdef SSL

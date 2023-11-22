@@ -3,6 +3,7 @@
 #include "file.h"
 #include "relay.h"
 #include "display.h"
+#include "database.h"
 
 #include <mutex>
 
@@ -14,12 +15,11 @@ struct Parameters
     bool    state;
 };
 
-
 class Controller
 {
 private:
-    File    parametersFile{"parameters.json"};
-    File    config{"config.json"};
+    File    parametersFile;
+    File    config;
     
     Relay   rel;
     Display disp;
@@ -36,9 +36,10 @@ private:
 
     std::string      driverFile;
     std::mutex       parametersMutex;
-public:    
-    Controller();
 
+    DataBase& db;
+public:    
+    Controller(DataBase& app);
     void run();
 
 

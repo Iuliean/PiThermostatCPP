@@ -1,7 +1,8 @@
 #include "site.h"
+#include "app.h"
 
 #include "sha/sha256.h"
-
+ 
 #include <string>
 #include <thread>
 #include <stdio.h>
@@ -14,10 +15,12 @@
                                                         .CROW_MIDDLEWARES(app, middleware)\
                                                         ([this](crow::request& req, crow::response& res){func(req,res);})
 
-Site::Site(Controller* otherController)
+Site::Site(DataBase& db, Controller& controller)
+    :db(db),
+    cntrl(controller),
+    configFile("config.json")
 {
-    cntrl               = otherController;
-
+    
     class SHA256 hasher;
     json j              = configFile.read();
     port                = j["site"]["port"];
@@ -103,7 +106,7 @@ void Site::dashboard(crow::request& req, crow::response& resp)
     CROW_LOG_INFO << "Serving Dashboard page";
 
     crow::mustache::context pageContext;
-    const Parameters params     = cntrl->getParameters();
+    const Parameters params     = cntrl.getParameters();
     
     pageContext["minTemp"]      = params.minTemp;
     pageContext["maxTemp"]      = params.maxTemp;
@@ -119,7 +122,7 @@ void Site::dashboard(crow::request& req, crow::response& resp)
 void Site::getParams(crow::request& req, crow::response& resp)
 {
     json returnJson;
-    const Parameters params     = cntrl->getParameters();
+    const Parameters params     = cntrl.getParameters();
     
     returnJson["status"]                = 0;
     returnJson["data"]["minTemp"]       = params.minTemp;
@@ -137,13 +140,13 @@ void Site::setParams(crow::request& req, crow::response& resp)
 {
     const json newSettings = json::parse(req.body);
     if(newSettings["minTemp"] != nullptr && newSettings["maxTemp"] != nullptr)
-        cntrl->setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
+        cntrl.setParameters(newSettings["minTemp"], newSettings["maxTemp"]);
     else
     {
         if(newSettings["minTemp"] == nullptr)
-            cntrl->setMaxTemp(newSettings["maxTemp"]);
+            cntrl.setMaxTemp(newSettings["maxTemp"]);
         else
-            cntrl->setMinTemp(newSettings["minTemp"]);
+            cntrl.setMinTemp(newSettings["minTemp"]);
     }
 
     resp.code = 200;
@@ -353,7 +356,7 @@ void Site::shutdown(crow::request& req, crow::response& resp)
 {
     CROW_LOG_INFO << "Shutting down";
 
-    cntrl->toDisk();
+    cntrl.toDisk();
     system("sudo shutdown +1");
 
     resp.code = 200;

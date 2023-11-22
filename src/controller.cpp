@@ -16,7 +16,11 @@
 
 //Controller Class
 
-Controller::Controller()
+Controller::Controller(DataBase& odb)
+	: config("config.json"),
+	parametersFile("parameters.json"),
+	db(odb)
+	
 {
 	wiringPiSetupGpio();
 	
@@ -56,7 +60,6 @@ void Controller::run()
 {
 	std::thread displayThread(&Display::run, &disp);
 	std::thread tempSaveRoutine ([this](){
-		DataBase& db = DataBase::getInstance();
 		while(true)
 		{
 			std::this_thread::sleep_for(std::chrono::minutes(10));
@@ -67,8 +70,6 @@ void Controller::run()
 	std::chrono::time_point<std::chrono::high_resolution_clock> lastSave = std::chrono::high_resolution_clock::now();	
 	std::chrono::time_point<std::chrono::high_resolution_clock> stateTime= std::chrono::high_resolution_clock::now();
 	
-	DataBase& db = DataBase::getInstance();
-
 	while(true)
 	{
 		checkTemp();
