@@ -3,7 +3,6 @@
 #include "crow/logging.h"
 #include "crow/middlewares/cookie_parser.h"
 #include "controller.h"
-#include "file.h"
 #include "database.h"
 #include "json_custom.h"
 #include "cookie.h"
@@ -47,7 +46,6 @@ class Site
 {
 private:
     DataBase&       db;
-    File            configFile;
     Controller&     cntrl;
 
     int             port;
@@ -57,7 +55,7 @@ private:
 
     crow::App<crow::CookieParser, Authentificator> app;
 public:
-    Site(DataBase& db, Controller& controller);
+    Site(DataBase& db, Controller& controller, const json& config);
 
     void run();
 

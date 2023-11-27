@@ -15,18 +15,16 @@
                                                         .CROW_MIDDLEWARES(app, middleware)\
                                                         ([this](crow::request& req, crow::response& res){func(req,res);})
 
-Site::Site(DataBase& db, Controller& controller)
+Site::Site(DataBase& db, Controller& controller, const json& config)
     :db(db),
-    cntrl(controller),
-    configFile("config.json")
+    cntrl(controller)
 {
     
     class SHA256 hasher;
-    json j              = configFile.read();
-    port                = j["site"]["port"];
-    cleanInterval       = j["site"]["cleanInterval"];
-    password            = hasher(j["site"]["password"]);
-    Cookie::lifetime    = j["site"]["cookieLifetime"];
+    cleanInterval       = config["cleanInterval"];
+    port                = config["port"];
+    password            = hasher(config["password"]);
+    Cookie::lifetime    = config["cookieLifetime"];
 
     app.loglevel(crow::LogLevel::Info);
 #ifdef CROW_ENABLE_SSL

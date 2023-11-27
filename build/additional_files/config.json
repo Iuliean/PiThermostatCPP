@@ -1,4 +1,5 @@
 {
+    "hardwareless": true,
     "site":{
         "port": 18080,
         "password": "centrala",
@@ -10,9 +11,9 @@
     "controller":{
         "numOfReads":6,
         "readDelay":60000,
-	"calibration":-3.8,
+	    "calibration":-3.8,
         "relayPin":14,
-	"driverFile": "/sys/bus/iio/devices/iio:device0/in_temp_input",
+	    "driverFile": "/sys/bus/iio/devices/iio:device0/in_temp_input",
         "saveInterval": 600,
         "display":{
             "digits":[18,17,27,22],
