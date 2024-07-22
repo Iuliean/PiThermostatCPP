@@ -17,15 +17,14 @@
 
 Site::Site(DataBase& db, Controller& controller, const json& config)
     :db(db),
-    cntrl(controller)
+    cntrl(controller),
+    app(Authentificator(config["requirePassword"]))
 {
-    
     class SHA256 hasher;
     cleanInterval       = config["cleanInterval"];
     port                = config["port"];
     password            = hasher(config["password"]);
     Cookie::lifetime    = config["cookieLifetime"];
-
     app.loglevel(crow::LogLevel::Info);
 #ifdef CROW_ENABLE_SSL
     if(j["site"]["ssl_files"][0] != nullptr && j["site"]["ssl_files"][1] != nullptr)

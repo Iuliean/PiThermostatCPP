@@ -9,12 +9,25 @@
 
 #include <string>
 
+class Site;
 struct Authentificator : crow::ILocalMiddleware
 {
     struct context{};
+    bool requirePassword;
+
+    Authentificator(bool requirePassword)
+        : requirePassword(requirePassword)
+    {
+
+    }
 
     void before_handle(crow::request& req, crow::response& res, context& ctx)
     {
+        if (!requirePassword)
+        {
+            return;
+        }
+
         if(Cookie::verifyCookie(req.get_header_value("Authorization")))
         {
             if(req.url == "/")
@@ -36,7 +49,6 @@ struct Authentificator : crow::ILocalMiddleware
                 return;
             }
         }
-        
     }
 
     void after_handle(crow::request& req, crow::response& res, context& ctx){}
@@ -58,8 +70,6 @@ public:
     Site(DataBase& db, Controller& controller, const json& config);
 
     void run();
-
-
 private:
     void auth(const crow::request& req, crow::response& resp);
     

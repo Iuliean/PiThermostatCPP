@@ -2,6 +2,7 @@
     "hardwareless": true,
     "site":{
         "port": 18080,
+        "requirePassword": true,
         "password": "centrala",
         "cookieLifetime": 60,
         "cleanInterval": 3600,
