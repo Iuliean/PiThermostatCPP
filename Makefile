@@ -28,7 +28,7 @@ export COMPILER_PREFIX
 all:libwiringpi sqlite sha thermostat
 	mkdir -p $(FINALOUTPUT)
 	$(COMPILER_PREFIX)g++ -o $(FINALOUTPUT)/site $(shell ls $(OUTPUTDIR)/*.o) $(FLAGS)
-	cp -r build/additional_files/* $(FINALOUTPUT)
+	ln -s -r build/additional_files/* $(FINALOUTPUT)
 
 .PHONY:sha
 sha:
