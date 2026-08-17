@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--query-driver=/opt/cross-pi-gcc-14.2.0-0/bin/arm-linux-gnueabihf-g++"
+    ]
+}
