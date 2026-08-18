@@ -1,7 +1,12 @@
-#include <print>
+#include "crow.h"
 
 int main()
 {
-    std::println("Hello World");
-    return 0;
+    crow::SimpleApp app;
+
+    CROW_ROUTE(app, "/")([](){
+        return "Hello world";
+    });
+
+    app.port(18080).multithreaded().run();
 }

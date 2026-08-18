@@ -21,10 +21,8 @@
             "name": "arm-linux-gnueabihf-release",
             "displayName": "Release Raspberry Pi Zero W ",
             "description": "Configures the project to use the Raspberry Pi toolchain",
-            "generator": "Ninja",
             "binaryDir": "out/build-arm-linux-gnueabihf-release",
             "installDir": "out/dist/arm-linux-gnueabihf-release",
-            "toolchainFile": "toolchain/arm-linux-gnueabihf.cmake",
             "environment": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -33,10 +31,8 @@
             "name": "arm-linux-gnueabihf-debug",
             "displayName": "Debug Raspberry Pi Zero W ",
             "description": "Configures the project to use the Raspberry Pi toolchain",
-            "generator": "Ninja",
             "binaryDir": "out/build-arm-linux-gnueabihf-debug",
             "installDir": "out/dist/arm-linux-gnueabihf-debug",
-            "toolchainFile": "toolchain/arm-linux-gnueabihf.cmake",
             "environment": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
