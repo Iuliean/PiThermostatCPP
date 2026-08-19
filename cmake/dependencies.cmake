@@ -52,11 +52,12 @@ function(setup_libgpiod)
         OUTPUT_QUIET
         ENVIRONMENT
             MESON_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/arm-linux-gnueabihf.ini
+            INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
     )
 
     message(STATUS "Adding libgpod to pkgconfig path")
     set(ENV{PKG_CONFIG_PATH}
-        "${CMAKE_BINARY_DIR}/libgpiod/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+        "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
     )
 
     message (STATUS "Setting libgpiod up...done")

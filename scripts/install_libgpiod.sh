@@ -4,7 +4,6 @@ readonly CMAKE_BUILD_ROOT=$(pwd)
 readonly TARGET_LIB=$LIB-$VERSION.tar.xz
 readonly SOURCE_PATH=$CMAKE_BUILD_ROOT/$LIB/libgpiod-$VERSION
 readonly BUILD_PATH=$CMAKE_BUILD_ROOT/$LIB/build
-readonly INSTALL_PATH=$CMAKE_BUILD_ROOT/$LIB
 
 mkdir -p $SOURCE_PATH
 
