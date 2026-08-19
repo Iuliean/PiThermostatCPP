@@ -64,8 +64,31 @@ function(setup_libgpiod)
 
 endfunction()
 
+function(setup_libi2c)
+    message(STATUS "Setting up libi2c-tools...")
+
+    execute_process(
+        COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_libi2c-tools.sh
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        ENVIRONMENT
+            CC=${CMAKE_C_COMPILER}
+            CXX=${CMAKE_CXX_COMPILER}
+            INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
+    )
+
+    add_library(i2c-tools INTERFACE)
+
+    target_include_directories(i2c-tools INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
+    target_link_directories(i2c-tools INTERFACE ${CMAKE_INSTALL_PREFIX}/lib)
+    target_link_libraries(i2c-tools INTERFACE i2c)
+
+    message(STATUS "Setting up libi2c-tools...done")
+
+endfunction()
+
 function(setup_dependencies)
     setup_asio()
     setup_crow()
     setup_libgpiod()
+    setup_libi2c()
 endfunction()

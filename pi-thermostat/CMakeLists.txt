@@ -8,6 +8,7 @@ add_executable(pi-thermostat ${SOURCE_FILES})
 target_link_libraries(pi-thermostat PRIVATE
     crow
     asio
+    i2c-tools
     PkgConfig::gpiod
     PkgConfig::gpiodcxx
 )
