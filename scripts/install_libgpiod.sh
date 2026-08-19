@@ -8,8 +8,9 @@ readonly BUILD_PATH=$CMAKE_BUILD_ROOT/$LIB/build
 mkdir -p $SOURCE_PATH
 
 if [[ ! -f  $TARGET_LIB ]]; then
-    echo "Downloading libgpio $CMAKE_C_COMPILER $CC"
+    echo "Downloading $LIB..."
     wget --quiet https://mirrors.edge.kernel.org/pub/software/libs/libgpiod/$TARGET_LIB
+    echo "Downloading $LIB...done"
 fi
 
 
