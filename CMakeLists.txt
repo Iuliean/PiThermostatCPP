@@ -8,7 +8,7 @@ setup_dependencies()
 
 find_package(PkgConfig REQUIRED)
 
-pkg_search_module(gpiod REQUIRED libgpiod)
+pkg_search_module(gpiodcxx REQUIRED IMPORTED_TARGET libgpiodcxx)
 
 
 
