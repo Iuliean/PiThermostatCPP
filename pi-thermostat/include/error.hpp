@@ -4,6 +4,22 @@
 #include <string>
 #include <utility>
 
+
+#define RETURN_IF_UNEXPECTED(e) do { \
+    auto res = e; \
+    if (!res) return res; }while(false)\
+
+
+#define RETURN_IF_EXPECTED(e) do { \
+    auto res = e; \
+    if (res) return res; }while(false)\
+
+
+#define RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(e, value) do { \
+    auto res = e; \
+    if (res) return value; else return std::unexpected{std::move(res).error()};} while(false)\
+
+
 namespace pi
 {
     template<typename Kind>
