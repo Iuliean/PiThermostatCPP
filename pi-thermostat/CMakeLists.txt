@@ -2,12 +2,18 @@
 set (HEADER_FILES 
     include/i2c/i2c_bus.hpp
     include/i2c/i2c_device.hpp
+
+    include/sensors/bmp280.hpp
+
     include/error.hpp
 )
 
 set(SOURCE_FILES 
     src/i2c/i2c_bus.cpp
     src/i2c/i2c_device.cpp
+
+    src/sensors/bmp280.cpp
+
     src/main.cpp
 )
 
