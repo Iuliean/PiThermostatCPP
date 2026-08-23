@@ -33,6 +33,7 @@ target_link_libraries(pi-thermostat PRIVATE
 target_compile_options(pi-thermostat PRIVATE -Wall -Werror -Wpedantic)
 target_link_directories(pi-thermostat PRIVATE ${gpiod_LIBRARY_DIRS})
 target_include_directories(pi-thermostat PRIVATE include/)
+target_link_libraries(pi-thermostat PRIVATE libcoro)
 
 set_property(TARGET pi-thermostat PROPERTY CXX_STANDARD 23 CXX_STANDARD_REQUIRED TRUE)
 

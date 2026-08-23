@@ -86,9 +86,30 @@ function(setup_libi2c)
 
 endfunction()
 
+function(setup_libcoro)
+    message(STATUS "Setting up libcoro...")
+
+    set(LIBCORO_BUILD_TESTS OFF)
+    set(LIBCORO_BUILD_EXAMPLES OFF)
+    set(LIBCORO_FEATURE_TLS OFF)
+    set(LIBCORO_FEATURE_NETWORKING OFF)
+
+    FetchContent_Declare(
+        libcoro
+        GIT_REPOSITORY https://github.com/jbaldwin/libcoro.git
+        GIT_TAG        "v0.16.0"
+    )
+
+    FetchContent_MakeAvailable(libcoro)
+
+    
+    message(STATUS "Setting up libcoro...done")
+endfunction()
+
 function(setup_dependencies)
     setup_asio()
     setup_crow()
     setup_libgpiod()
     setup_libi2c()
+    setup_libcoro()
 endfunction()
