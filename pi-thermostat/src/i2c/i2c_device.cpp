@@ -27,10 +27,10 @@ namespace i2c
             );
         }
 
-        std::expected<std::size_t, i2c_error> device::read_block(std::uint8_t command, block& data_block) const noexcept
+        std::expected<std::size_t, i2c_error> device::read_block(std::uint8_t command, std::span<std::byte> data_block) const noexcept
         {
             return select_this_device()
-                .and_then([this, command, &data_block](){
+                .and_then([this, command, data_block](){
                     return m_i2c_bus->read_block(command, data_block);
                 }
             );

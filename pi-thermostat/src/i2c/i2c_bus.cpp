@@ -121,11 +121,20 @@ namespace i2c
         );
     }
 
-    std::expected<std::size_t, i2c_error> bus::read_block(std::uint8_t command, block& data_block)const noexcept
+    std::expected<std::size_t, i2c_error> bus::read_block(std::uint8_t command, std::span<std::byte> data_block) const noexcept
     {
-        const auto result = ::i2c_smbus_read_block_data(
+        if (data_block.size() > I2C_SMBUS_BLOCK_MAX)
+            return std::unexpected{
+                i2c_error{
+                    i2c_error_names::generic_error,
+                    std::format("Maximum size for requested blocks is {}", I2C_SMBUS_BLOCK_MAX)
+                }
+            };
+
+        const auto result = ::i2c_smbus_read_i2c_block_data(
             m_bus_descriptor,
             command,
+            data_block.size(),
             reinterpret_cast<__u8*>(data_block.data()));
 
         if (result < 0 )
