@@ -55,11 +55,6 @@ function(setup_libgpiod)
             INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
     )
 
-    message(STATUS "Adding libgpod to pkgconfig path")
-    set(ENV{PKG_CONFIG_PATH}
-        "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
-    )
-
     message (STATUS "Setting libgpiod up...done")
 
 endfunction()
@@ -106,10 +101,42 @@ function(setup_libcoro)
     message(STATUS "Setting up libcoro...done")
 endfunction()
 
+function(setup_sqlite3)
+    FetchContent_Declare(
+        sqlite_source
+        GIT_REPOSITORY https://github.com/sqlite/sqlite.git
+        GIT_TAG version-3.53.4
+    )
+
+    FetchContent_MakeAvailable(sqlite_source)
+
+    execute_process(
+        COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_sqlite3.sh
+        WORKING_DIRECTORY ${sqlite_source_SOURCE_DIR}
+        ENVIRONMENT
+            CC=${CMAKE_C_COMPILER}
+            CXX=${CMAKE_CXX_COMPILER}
+            INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
+    )
+
+    add_library(sqlite3 INTERFACE)
+
+    target_include_directories(sqlite3 INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
+    target_link_directories(sqlite3 INTERFACE ${CMAKE_INSTALL_PREFIX}/lib)
+    target_link_libraries(sqlite3 INTERFACE sqlite3)
+
+endfunction()
+
 function(setup_dependencies)
+
+    set(ENV{PKG_CONFIG_PATH}
+        "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
+    )
+
     setup_asio()
     setup_crow()
     setup_libgpiod()
     setup_libi2c()
     setup_libcoro()
+    setup_sqlite3()
 endfunction()

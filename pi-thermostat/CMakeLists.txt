@@ -7,6 +7,7 @@ set (HEADER_FILES
 
     include/error.hpp
     include/events.hpp
+    include/database.hpp
 )
 
 set(SOURCE_FILES 
@@ -17,6 +18,7 @@ set(SOURCE_FILES
 
     src/main.cpp
     src/events.cpp
+    src/database.cpp
 )
 
 add_executable(pi-thermostat
@@ -35,7 +37,7 @@ target_link_libraries(pi-thermostat PRIVATE
 target_compile_options(pi-thermostat PRIVATE -Wall -Werror -Wpedantic)
 target_link_directories(pi-thermostat PRIVATE ${gpiod_LIBRARY_DIRS})
 target_include_directories(pi-thermostat PRIVATE include/)
-target_link_libraries(pi-thermostat PRIVATE libcoro)
+target_link_libraries(pi-thermostat PRIVATE libcoro sqlite3)
 
 set_property(TARGET pi-thermostat PROPERTY CXX_STANDARD 23 CXX_STANDARD_REQUIRED TRUE)
 
