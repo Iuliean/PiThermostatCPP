@@ -6,6 +6,7 @@ set (HEADER_FILES
     include/sensors/bmp280.hpp
 
     include/error.hpp
+    include/events.hpp
 )
 
 set(SOURCE_FILES 
@@ -15,6 +16,7 @@ set(SOURCE_FILES
     src/sensors/bmp280.cpp
 
     src/main.cpp
+    src/events.cpp
 )
 
 add_executable(pi-thermostat
