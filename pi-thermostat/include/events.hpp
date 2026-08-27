@@ -51,7 +51,11 @@ namespace pi
     {
     public:
 
-        void emit(event e);
+        template<typename ...Args>
+        void set_resource(std::string name, Args&&... args);
+
+        template<typename T>
+        void get_resource(std::string name);
 
         template<std::derived_from<resource_interface> R>
         void register_resource(R resource);
