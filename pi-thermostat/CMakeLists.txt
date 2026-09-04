@@ -35,9 +35,10 @@ target_link_libraries(pi-thermostat PRIVATE
 )
 
 target_compile_options(pi-thermostat PRIVATE -Wall -Werror -Wpedantic)
+target_compile_definitions(pi-thermostat PRIVATE SPDLOG_USE_STD_FORMAT)
 target_link_directories(pi-thermostat PRIVATE ${gpiod_LIBRARY_DIRS})
 target_include_directories(pi-thermostat PRIVATE include/)
-target_link_libraries(pi-thermostat PRIVATE libcoro sqlite3)
+target_link_libraries(pi-thermostat PRIVATE libcoro sqlite3 spdlog::spdlog_header_only nlohmann_json::nlohmann_json)
 
 set_property(TARGET pi-thermostat PROPERTY CXX_STANDARD 23 CXX_STANDARD_REQUIRED TRUE)
 

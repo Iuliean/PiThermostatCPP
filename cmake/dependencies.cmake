@@ -123,7 +123,43 @@ function(setup_sqlite3)
 
     target_include_directories(sqlite3 INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
     target_link_directories(sqlite3 INTERFACE ${CMAKE_INSTALL_PREFIX}/lib)
-    target_link_libraries(sqlite3 INTERFACE sqlite3)
+    target_link_libraries(sqlite3 INTERFACE libsqlite3.a)
+
+endfunction()
+
+function(setup_spdlog)
+    FetchContent_Declare(
+        spdlog_source
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.17.0
+    )
+
+    FetchContent_MakeAvailable(spdlog_source)
+    # execute_process(
+    #     COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_spdlog.sh
+    #     WORKING_DIRECTORY ${spdlog_source_SOURCE_DIR}
+    #     ENVIRONMENT
+    #         CC=${CMAKE_C_COMPILER}
+    #         CXX=${CMAKE_CXX_COMPILER}
+    #         INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
+    # )
+
+    # add_library(spdlog INTERFACE)
+    # target_include_directories(sqlite3 INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
+    # target_link_libraries(sqlite3 INTERFACE sqlite3)
+
+endfunction()
+
+function(setup_json)
+    include(FetchContent)
+
+    FetchContent_Declare(
+        json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.12.0
+    )
+
+    FetchContent_MakeAvailable(json)
 
 endfunction()
 
@@ -139,4 +175,6 @@ function(setup_dependencies)
     setup_libi2c()
     setup_libcoro()
     setup_sqlite3()
+    setup_spdlog()
+    setup_json()
 endfunction()
