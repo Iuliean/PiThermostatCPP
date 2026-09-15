@@ -19,7 +19,11 @@ cd $LIB
 tar xf $CMAKE_BUILD_ROOT/$TARGET_LIB
 
 mkdir -p $BUILD_PATH && cd $BUILD_PATH
-meson setup --prefix=$INSTALL_PATH --buildtype=release $SOURCE_PATH --cross-file=$MESON_TOOLCHAIN_FILE -Dtests=disabled
+if [[ -v MESON_TOOLCHAIN_FILE ]]; then
+    meson setup --prefix=$INSTALL_PATH --buildtype=release $SOURCE_PATH --cross-file=$MESON_TOOLCHAIN_FILE -Dtests=disabled
+else
+    meson setup --prefix=$INSTALL_PATH --buildtype=release $SOURCE_PATH -Dtests=disabled
+fi
 echo "Building $LIB-$VERSION..."
 ninja
 ninja install
