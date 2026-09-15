@@ -27,15 +27,16 @@ namespace pi
     class resource_interface
     {
     public:
+        virtual ~resource_interface() = default;
         virtual void perform(transaction t) = 0;
     private:
     };
 
-    template<typename StoreSig, typename FetchSig>
+    template<typename StoreSig, typename R>
     class bidirectional_resource : public resource_interface
     {
     public:
-        bidirectional_resource(std::function<StoreSig> store_fn, std::function<FetchSig> fetch_fn)
+        bidirectional_resource(std::function<StoreSig> store_fn, std::function<R()> fetch_fn)
             : m_store(std::move(store_fn)), m_fetch(std::move(fetch_fn))
         {}
 
@@ -43,7 +44,7 @@ namespace pi
 
     private:
         std::function<StoreSig> m_store;
-        std::function<FetchSig> m_fetch;
+        std::function<R()> m_fetch;
     };
 
 
