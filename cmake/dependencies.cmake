@@ -46,14 +46,24 @@ endfunction()
 function(setup_libgpiod)
     message (STATUS "Setting libgpiod up...")
 
-    execute_process(
-        COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_libgpiod.sh
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        OUTPUT_QUIET
-        ENVIRONMENT
+    if (CMAKE_CROSSCOMPILING)
+        execute_process(
+            COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_libgpiod.sh
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            OUTPUT_QUIET
+            ENVIRONMENT
             MESON_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/arm-linux-gnueabihf.ini
             INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
-    )
+        )
+    else()
+        message(STATUS "Native build of libgpio")
+        execute_process(
+            COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/install_libgpiod.sh
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            ENVIRONMENT
+            INSTALL_PATH=${CMAKE_INSTALL_PREFIX}
+        )
+    endif()
 
     message (STATUS "Setting libgpiod up...done")
 
@@ -168,7 +178,6 @@ function(setup_dependencies)
     set(ENV{PKG_CONFIG_PATH}
         "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}"
     )
-
     setup_asio()
     setup_crow()
     setup_libgpiod()
