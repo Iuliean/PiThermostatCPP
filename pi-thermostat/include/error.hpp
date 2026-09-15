@@ -3,21 +3,20 @@
 #include <type_traits>
 #include <string>
 #include <utility>
-
+#include <format>
+#include <concepts>
 
 #define RETURN_IF_UNEXPECTED(e) do { \
     auto res = e; \
-    if (!res) return res; }while(false)\
-
+    if (!res) return res; }while(false) \
 
 #define RETURN_IF_EXPECTED(e) do { \
     auto res = e; \
-    if (res) return res; }while(false)\
-
+    if (res) return res; }while(false) \
 
 #define RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(e, value) do { \
     auto res = e; \
-    if (res) return value; else return std::unexpected{std::move(res).error()};} while(false)\
+    if (res) return value; else return std::unexpected{std::move(res).error()};} while(false) \
 
 
 namespace pi
@@ -31,6 +30,16 @@ namespace pi
             : m_err_kind(kind),
               m_message(std::move(message))
         { }
+
+        constexpr error(Kind kind, std::string_view message) noexcept
+            : m_err_kind(kind),
+              m_message(message)
+        { }
+
+        constexpr error(Kind kind, const char* message) noexcept
+            : error(kind, std::string_view(message))
+        { }
+        
         constexpr ~error() = default;
 
         constexpr Kind kind() const noexcept { return m_err_kind; }
@@ -43,6 +52,19 @@ namespace pi
     private:
         Kind m_err_kind;
         std::string m_message;
+    };
+}
+
+namespace std
+{
+    template<typename Kind>
+    struct formatter<pi::error<Kind>> : public formatter<std::string>
+    {
+        template<typename FmtContext>
+        FmtContext::iterator format(const pi::error<Kind>& err, FmtContext &ctx) const
+        {
+            return std::formatter<std::string>::format(err.message(), ctx);
+        }
     };
 }
 
