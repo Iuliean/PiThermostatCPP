@@ -59,7 +59,7 @@ namespace pi
                         };
                     return {};
                 })
-                .and_then([&bmp, &bus]() -> std::expected<bmp280, bmp280_error> {
+                .and_then([&bmp]() -> std::expected<bmp280, bmp280_error> {
                     bmp280 sensor{bmp};
 
                     RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(
