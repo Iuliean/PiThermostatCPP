@@ -1,6 +1,7 @@
 #ifndef DATABASE_HPP
 #define DATABASE_HPP
 
+#include <chrono>
 #include <cstdint>
 #include<filesystem>
 #include <expected>
@@ -124,6 +125,8 @@ namespace pi
         ~database_manager() = default;
 
         std::expected<sqlite_connection, sqlite_error> get_connection()const noexcept;
+
+        void insert_state(bool state, std::chrono::seconds duration);
 
     private:
         std::filesystem::path m_db_path;

@@ -21,12 +21,10 @@ namespace pi
         );
 
         if (result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    ::sqlite3_errmsg(obj)
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                ::sqlite3_errmsg(obj)
+            );
 
         return sqlite_connection{obj};
     }
@@ -60,12 +58,10 @@ namespace pi
         const int result = ::sqlite3_prepare_v3(m_sqlite_obj, query.data(), query.size(), 0, &statement, &remainder);
 
         if ( result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    std::format("Failed to prepare statement. Stopped at {}. {}", query.substr(remainder - query.begin()), error_message())
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                std::format("Failed to prepare statement. Stopped at {}. {}", query.substr(remainder - query.begin()), error_message())
+            );
 
         return sqlite_statement{
             statement,
@@ -128,12 +124,10 @@ namespace pi
         );
 
         if (result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    m_db->error_message()
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                m_db->error_message()
+            );
 
         return {};
     }
@@ -147,12 +141,10 @@ namespace pi
         );
 
         if (result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    m_db->error_message()
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                m_db->error_message()
+            );
 
         return {};
     }
@@ -166,12 +158,10 @@ namespace pi
         );
 
         if (result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    m_db->error_message()
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                m_db->error_message()
+            );
 
         return {};
     }
@@ -187,12 +177,10 @@ namespace pi
         );
 
         if (result != SQLITE_OK)
-            return std::unexpected{
-                sqlite_error{
-                    sqlite_result{result},
-                    m_db->error_message()
-                }
-            };
+            return sqlite_error::make_error(
+                sqlite_result{result},
+                m_db->error_message()
+            );
 
         return {};
     }
@@ -297,6 +285,11 @@ namespace pi
     std::expected<sqlite_connection, sqlite_error> database_manager::get_connection()const noexcept
     {
         return sqlite_connection::create(m_db_path, sqlite_access_mode::readwrite);
+    }
+
+    void database_manager::insert_state(bool state, std::chrono::seconds seconds)
+    {
+
     }
 
     /**********
