@@ -5,6 +5,7 @@
 #include <utility>
 #include <format>
 #include <concepts>
+#include <expected>
 
 #define RETURN_IF_UNEXPECTED(e) do { \
     auto res = e; \
@@ -21,8 +22,10 @@
 
 namespace pi
 {
+
+    using errno_t = int;
     template<typename Kind>
-        requires std::is_enum_v<Kind>
+        requires (std::is_enum_v<Kind> || std::same_as<Kind, errno_t>)
     class error
     {
     public:
@@ -49,10 +52,20 @@ namespace pi
             return std::forward_like<decltype(self)>(self.m_message);
         }
 
+        static std::unexpected<error<Kind>> make_error(Kind kind, auto&& message) noexcept
+        {
+            return std::unexpected<error<Kind>>{
+                std::in_place,
+                kind,
+                std::forward<decltype(message)&&>(message)
+            };
+        }
     private:
         Kind m_err_kind;
         std::string m_message;
     };
+
+    using os_error = error<errno_t>;
 }
 
 namespace std
