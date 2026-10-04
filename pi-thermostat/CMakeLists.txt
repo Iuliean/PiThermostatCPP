@@ -5,6 +5,8 @@ set (HEADER_FILES
 
     include/sensors/bmp280.hpp
 
+    include/async/sleep.hpp
+
     include/error.hpp
     include/events.hpp
     include/controller.hpp
@@ -18,6 +20,8 @@ set(SOURCE_FILES
     src/i2c/i2c_device.cpp
 
     src/sensors/bmp280.cpp
+
+    src/async/sleep.cpp
 
     src/main.cpp
     src/events.cpp
