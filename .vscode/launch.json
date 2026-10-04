@@ -12,6 +12,13 @@
             "args": [],
             "env": [],
             "cwd": "${workspaceFolder}/out/dist/native-debug/bin"
+        },
+        {
+            "type": "lldb-dap",
+            "request": "attach",
+            "name": "remote-debug",
+            "program": "${workspaceFolder}/out/dist/arm-linux-gnueabihf-debug/bin/pi-thermostat",
+            "attachCommands": ["gdb-remote 192.168.0.18:5555"]
         }
     ]
 }
