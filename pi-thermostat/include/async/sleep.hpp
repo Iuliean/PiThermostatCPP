@@ -18,6 +18,13 @@
 
 namespace pi::async
 {
+    /*
+        awaitable sleep timer
+        IMPORTANT: with it's current implementation you HAVE to awaitthe object
+        else you might cancel the underlying linux timer which will not cleanup some heap allocated stuff
+
+        I will come back to it at somepoint HOPEFULLY
+    */
     class sleep_timer
     {
     public:
@@ -63,11 +70,17 @@ namespace pi::async
                     errno_t{errno},
                     std::strerror(errno)
                 );
-            
+
             return std::expected<sleep_timer, os_error>{std::in_place, timer_id, coro_event};
         }
         sleep_timer(timer_t timer_id, std::shared_ptr<coro::event> event);
 
+        sleep_timer(const sleep_timer&) = delete;
+        sleep_timer& operator=(const sleep_timer&) = delete;
+        
+        sleep_timer(sleep_timer&&) = delete;
+        sleep_timer& operator=(sleep_timer&&) = delete;
+    
         ~sleep_timer();
 
         coro::event::awaiter operator co_await() { return coro::event::awaiter(*m_event); }

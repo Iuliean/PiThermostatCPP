@@ -23,7 +23,6 @@ namespace pi::async
     {
         auto shared_obj_ptr = reinterpret_cast<std::shared_ptr<coro::event>*>(val.sival_ptr);
         auto event_ptr = *shared_obj_ptr;
-        //spdlog::debug("Sleep event for: {}", static_cast<void*>(event_ptr.get()));
         event_ptr->set();
         delete shared_obj_ptr;
     };
