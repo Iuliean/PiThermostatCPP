@@ -75,7 +75,6 @@ namespace pi
     display::~display()
     {
         stop();
-        m_stop_flag.wait(false);
     }
 
     coro::task<void> display::run()
@@ -154,6 +153,7 @@ namespace pi
     void display::stop()
     {
         m_stop = true;
+        m_stop_flag.wait(false);
     }
 
     /**********
