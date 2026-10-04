@@ -11,6 +11,13 @@ namespace pi
     {
     public:
         display(gpiod::chip& gpio_chip, std::flat_map<char, std::size_t> segments_pin_map, std::array<std::size_t, 4> digit_pins);
+
+        display(const display&) = delete;
+        display& operator=(const display&) = delete;
+
+        display(display&&) = delete;
+        display& operator=(display&&) = delete;
+
         ~display();
 
         coro::task<void> run();
