@@ -76,6 +76,12 @@ namespace pi
             disable = 0,
         };
 
+        static std::optional<temperature_oversampling> temp_oversampling_from(std::int32_t value) noexcept;
+        static std::optional<pressure_oversampling> pressure_oversampling_from(std::int32_t value) noexcept;
+        static std::optional<power_mode> power_mode_from(std::string_view value) noexcept;
+        static std::optional<standby_time> standby_time_from(std::int32_t value) noexcept;
+        static std::optional<iir_filter_coef> iir_coef_from(std::int32_t value) noexcept;
+
         struct calibration_data
         {
             std::uint16_t dig_T1;
@@ -132,7 +138,7 @@ namespace pi
             std::uint8_t m_ctrl_meas;
         };
 
-        static std::expected<bmp280, bmp280_error> create(const i2c::bus& bus);
+        static std::expected<bmp280, bmp280_error> create(const i2c::bus& bus, std::optional<config> config = {});
 
         bmp280(i2c::device device);
         ~bmp280() = default;

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <expected>
 #include <print>
+#include <string_view>
 #include <utility>
 
 namespace pi
@@ -37,7 +38,79 @@ namespace pi
     constexpr static std::size_t g_calibration_data_reg_end = 0xA1;
 
 
+    std::optional<bmp280::temperature_oversampling> bmp280::temp_oversampling_from(std::int32_t value) noexcept
+    {
+        switch (value)
+        {
+            using enum bmp280::temperature_oversampling;
+            case 0: return disable;
+            case 1: return x1;
+            case 2: return x2;
+            case 4: return x4;
+            case 8: return x8;
+            case 16: return x16;
+            default: return {};
+        }
+        std::unreachable();
+    }
 
+    std::optional<bmp280::pressure_oversampling> bmp280::pressure_oversampling_from(std::int32_t value) noexcept
+    {
+        switch (value)
+        {
+            using enum bmp280::pressure_oversampling;
+            case 0: return disable;
+            case 1: return x1;
+            case 2: return x2;
+            case 4: return x4;
+            case 8: return x8;
+            case 16: return x16;
+            default: return {};
+        }
+        std::unreachable();
+    }
+
+    std::optional<bmp280::power_mode> bmp280::power_mode_from(std::string_view value) noexcept
+    {
+        using enum power_mode;
+        if (value == "sleep") return sleep;
+        else if (value == "normal") return normal;
+        else if (value == "forced") return forced;
+        else return {};
+    }
+
+    std::optional<bmp280::standby_time> bmp280::standby_time_from(std::int32_t value) noexcept
+    {
+        switch(value)
+        {
+            using enum bmp280::standby_time;
+            case 0: return ms_0_5;
+            case 62: return ms_62_5;
+            case 125: return ms_125;
+            case 250: return ms_250;
+            case 500: return ms_500;
+            case 1000: return ms_1000;
+            case 2000: return ms_2000;
+            case 4000: return ms_4000;
+            default: return {};
+        }
+        std::unreachable();
+    }
+
+    std::optional<bmp280::iir_filter_coef> bmp280::iir_coef_from(std::int32_t value) noexcept
+    {
+        switch (value)
+        {
+            using enum bmp280::iir_filter_coef;
+            case 0: return off;
+            case 2: return x2;
+            case 4: return x4;
+            case 8: return x8;
+            case 16: return x16;
+            default: return {};
+        }
+        std::unreachable();
+    }
 
 
     std::expected<bmp280, bmp280_error> bmp280::create(const i2c::bus& bus, std::optional<config> config)
