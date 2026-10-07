@@ -51,7 +51,7 @@ namespace i2c
         return {};
     }
 
-    std::expected<bus, i2c_error> bus::open(std::filesystem::path path) noexcept
+    std::expected<bus, i2c_error> bus::open(std::filesystem::path path)
     {
         const descriptor fd = ::open(std::filesystem::absolute(path).c_str(), O_RDWR);
 

@@ -25,7 +25,7 @@ namespace i2c
     class bus
     {
     public:
-        static std::expected<bus, i2c_error> open(std::filesystem::path p) noexcept;
+        static std::expected<bus, i2c_error> open(std::filesystem::path p);
 
         explicit bus(descriptor fd) noexcept;
         ~bus() noexcept;
