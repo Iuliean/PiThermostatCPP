@@ -1,5 +1,6 @@
 #ifndef ERROR_HPP
 #define ERROR_HPP
+#include <source_location>
 #include <type_traits>
 #include <string>
 #include <utility>
@@ -29,21 +30,23 @@ namespace pi
     class error
     {
     public:
-        constexpr error(Kind kind, std::string message) noexcept
+        constexpr error(Kind kind, std::string message, std::source_location source = {}) noexcept
             : m_err_kind(kind),
-              m_message(std::move(message))
+              m_message(std::move(message)),
+              m_source(std::move(source))
         { }
 
-        constexpr error(Kind kind, std::string_view message) noexcept
+        constexpr error(Kind kind, std::string_view message, std::source_location source = {})
             : m_err_kind(kind),
-              m_message(message)
+              m_message(message),
+              m_source(std::move(source))
         { }
 
-        constexpr error(Kind kind, const char* message) noexcept
-            : error(kind, std::string_view(message))
+        constexpr error(Kind kind, const char* message, std::source_location source = {})
+            : error(kind, std::string_view(message), source)
         { }
-        
-        constexpr ~error() = default;
+
+        constexpr ~error() {};
 
         constexpr Kind kind() const noexcept { return m_err_kind; }
 
@@ -52,17 +55,21 @@ namespace pi
             return std::forward_like<decltype(self)>(self.m_message);
         }
 
-        static std::unexpected<error<Kind>> make_error(Kind kind, auto&& message) noexcept
+        constexpr std::source_location source()const noexcept { return m_source; }
+
+        static std::unexpected<error<Kind>> make_error(Kind kind, auto&& message, std::source_location source = {}) noexcept
         {
             return std::unexpected<error<Kind>>{
                 std::in_place,
                 kind,
-                std::forward<decltype(message)&&>(message)
+                std::forward<decltype(message)&&>(message),
+                std::move(source)
             };
         }
     private:
         Kind m_err_kind;
         std::string m_message;
+        std::source_location m_source;
     };
 
     using os_error = error<errno_t>;
@@ -76,7 +83,7 @@ namespace std
         template<typename FmtContext>
         FmtContext::iterator format(const pi::error<Kind>& err, FmtContext &ctx) const
         {
-            return std::formatter<std::string>::format(err.message(), ctx);
+            return std::format_to(ctx.out(), "{}:{}: err{{ code{}:{} }}", err.source().file_name(), err.source().line(), std::to_underlying(err.kind()), err.message()); 
         }
     };
 }
