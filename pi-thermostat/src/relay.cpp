@@ -15,6 +15,21 @@ namespace pi
           }())
     { }
 
+    relay::relay(relay&& other) noexcept
+        : m_pin(other.m_pin),
+          m_lines(std::move(other.m_lines))
+    { }
+
+    relay& relay::operator=(relay&& other) noexcept
+    {
+        m_pin = other.m_pin;
+        m_lines = std::move(other.m_lines);
+        return *this;
+    }
+
+
+    relay::~relay() { }
+
     void relay::set(bool value)
     {
         m_lines.set_value(m_pin, value ? gpiod::line::value::ACTIVE : gpiod::line::value::INACTIVE);

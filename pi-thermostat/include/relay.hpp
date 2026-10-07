@@ -8,7 +8,11 @@ namespace pi
     {
     public:
         relay(gpiod::chip& chip, std::size_t pin);
-        ~relay() = default;
+
+        relay(relay&& other) noexcept;
+        relay& operator=(relay&& other) noexcept;
+
+        ~relay();
 
         void set(bool value);
         bool state();
