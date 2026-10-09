@@ -17,6 +17,10 @@ namespace pi
 {
     static constexpr std::string_view g_persistence_file{"./params.json"};
 
+    static std::int64_t get_timestamp()
+    {
+        return std::chrono::steady_clock::now().time_since_epoch().count();
+    }
 
     std::expected<controller, std::string> controller::create(database_manager& db_manager, relay relay, bmp280 temp_sensor, display& display)
     {
@@ -49,6 +53,7 @@ namespace pi
         if (!std::filesystem::exists(g_persistence_file))
         {
             ::spdlog::info("No persistence file found. Using default values");
+            save_parameters_to_persistance();
             return;
         }
 
@@ -72,12 +77,14 @@ namespace pi
     coro::task<void> controller::run()
     {
         using namespace std::chrono_literals;
-        auto last_state_save = std::chrono::steady_clock::now();
-        auto insert_state_to_db = [this, &last_state_save] (bool state) {
-            auto now = std::chrono::steady_clock::now();
-            auto res = m_db_manager.insert_state(
+
+        auto insert_state_to_db = [this] (bool state) {
+            static auto last_state_save = std::chrono::steady_clock::now();
+            const auto now = std::chrono::steady_clock::now();
+            const auto res = m_db_manager.insert_state(
                 m_db_connection,
                 state,
+                get_timestamp(),
                 std::chrono::duration_cast<std::chrono::seconds>(now - last_state_save)
             );
             last_state_save = now;
@@ -85,21 +92,43 @@ namespace pi
                 ::spdlog::error("Failed to insert state into database: {}", res.error());
         };
 
+        auto insert_temp_to_db = [this](std::int32_t temp){
+            static auto last_temp_save = std::chrono::steady_clock::now();
+            const auto now = std::chrono::steady_clock::now();
+
+            if (now - last_temp_save < 1min)
+                return;
+
+            const auto res = m_db_manager.insert_temperature(
+                m_db_connection,
+                temp,
+                get_timestamp()
+            );
+
+            if(!res)
+                ::spdlog::error("Failed to insert temperatore into database: {}", res.error());
+            else
+                ::spdlog::debug("Temp insert");
+
+            last_temp_save = now;
+        };
+
         while (!m_stop)
         {
             const parameters params = m_parameters;
-            const auto temp = m_temp_sensor.get_temp()
-                .transform([this, &params](std::int32_t temp){
-                    m_temp = temp + params.temp_offset;
-                    m_display.show(m_temp / 10);
-                }
-            );
+            const auto temp = m_temp_sensor.get_temp();
 
-            if (!temp)
+            if (temp)
+            {
+                m_temp = *temp + params.temp_offset;
+                m_display.show(m_temp / 10);
+                insert_temp_to_db(*temp);
+            }
+            else
                 ::spdlog::error("Failed to read temperature: {}", temp.error());
 
-
-            if (m_temp < params.min_temp && m_relay.state())
+            ::spdlog::debug("temp: {}, min:{}, max:{}, state:{}", m_temp.load(), params.min_temp, params.max_temp, m_relay.state());
+            if (m_temp < params.min_temp && !m_relay.state())
             {
                 ::spdlog::debug("Relay -> on");
                 m_relay.set(true);
