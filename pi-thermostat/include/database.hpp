@@ -126,8 +126,8 @@ namespace pi
 
         std::expected<sqlite_connection, sqlite_error> get_connection()const noexcept;
 
-        std::expected<void, sqlite_error> insert_state(sqlite_connection& connection, bool state, std::chrono::seconds duration);
-        std::expected<void, sqlite_error> insert_temperature(sqlite_connection& connection, std::int32_t temperature);
+        std::expected<void, sqlite_error> insert_state(sqlite_connection& connection, bool state, std::int64_t timestamp, std::chrono::seconds duration);
+        std::expected<void, sqlite_error> insert_temperature(sqlite_connection& connection, std::int32_t temperature, std::int64_t timestamp);
 
     private:
         std::filesystem::path m_db_path;

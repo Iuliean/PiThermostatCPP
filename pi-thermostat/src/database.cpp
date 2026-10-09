@@ -1,4 +1,5 @@
 #include "database.hpp"
+#include "display.hpp"
 #include "error.hpp"
 #include <cassert>
 #include <expected>
@@ -194,26 +195,12 @@ namespace pi
             switch (result)
             {
                 case SQLITE_ERROR:
-                    return std::unexpected{
-                        sqlite_error{
-                            sqlite_result::sqlite_error,
-                            m_db->error_message()
-                        }
-                    };
                 case SQLITE_BUSY:
-                    return std::unexpected{
-                        sqlite_error{
-                            sqlite_result::sqlite_busy,
-                            m_db->error_message()
-                        }
-                    };
                 case SQLITE_MISUSE:
-                    return std::unexpected{
-                        sqlite_error{
-                            sqlite_result::sqlite_misuse,
+                    return sqlite_error::make_error(
+                            sqlite_result{result},
                             m_db->error_message()
-                        }
-                    };
+                        );
                 case SQLITE_ROW:
                 {
                     const int col_count = column_count();
@@ -257,12 +244,12 @@ namespace pi
 
     int sqlite_statement::index_of(const char* name) const noexcept
     {
-        return sqlite3_bind_parameter_index(m_statement, name);
+        return ::sqlite3_bind_parameter_index(m_statement, name);
     }
 
     int sqlite_statement::column_count() const noexcept
     {
-        return sqlite3_column_count(m_statement);
+        return ::sqlite3_column_count(m_statement);
     }
 
     std::string sqlite_statement::column_name(int index) noexcept
@@ -288,29 +275,31 @@ namespace pi
         return sqlite_connection::create(m_db_path, sqlite_access_mode::readwrite);
     }
 
-    std::expected<void, sqlite_error> database_manager::insert_state(sqlite_connection& connection, bool state, std::chrono::seconds seconds)
+    std::expected<void, sqlite_error> database_manager::insert_state(sqlite_connection& connection, bool state, std::int64_t timestamp, std::chrono::seconds duration)
     {
         auto statement = connection
-            .prepare_statement("INSERT INTO States (state, date, time, duration) VALUES ( :state , DATE(), TIME(), :duration);");
+            .prepare_statement("INSERT INTO states (state, timestamp, duration) VALUES ( :state , :timestamp, :duration);");
 
         if (!statement)
             return std::unexpected{statement.error()};
 
-        RETURN_IF_UNEXPECTED(statement->bind_parameter("statement", state));
-        RETURN_IF_UNEXPECTED(statement->bind_parameter("duration", seconds.count()));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter(":state", state));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter(":timestamp", timestamp));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter(":duration", duration.count()));
 
         RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement->execute(), {});
     }
 
-    std::expected<void, sqlite_error> database_manager::insert_temperature(sqlite_connection& connection, std::int32_t temperature)
+    std::expected<void, sqlite_error> database_manager::insert_temperature(sqlite_connection& connection, std::int32_t temperature, std::int64_t timestamp)
     {
         auto statement = connection
-            .prepare_statement("INSERT INTO Temperatures (value, date, time) VALUES (:temperature, DATE(), TIME());");
+            .prepare_statement("INSERT INTO temperatures (value, timestamp) VALUES (:temperature, :timestamp);");
 
         if (!statement)
             return std::unexpected{statement.error()};
 
-        RETURN_IF_UNEXPECTED(statement->bind_parameter("temperature", temperature));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter(":temperature", temperature));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter(":timestamp", timestamp));
 
         RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement->execute(), {});
     }

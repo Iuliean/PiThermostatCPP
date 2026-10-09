@@ -195,7 +195,7 @@ std::expected<pi::database_manager, pi::sqlite_error> initialize_database(std::f
     return ::pi::sqlite_connection::create(db_path, ::pi::sqlite_access_mode::create)
         .and_then([](pi::sqlite_connection db) -> std::expected<void, pi::sqlite_error> {
             RETURN_IF_UNEXPECTED(
-                db.prepare_statement("CREATE TABLE IF NOT EXISTS temperatures (value REAL NOT NULL, date DATE NOT NULL, time TIME NOT NULL);")
+                db.prepare_statement("CREATE TABLE IF NOT EXISTS temperatures (value INTEGER NOT NULL, timestamp INTEGER NOT NULL);")
                     .and_then([](pi::sqlite_statement statement) -> std::expected<void, pi::sqlite_error> {
                         RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement.execute(), {});
                     }
@@ -203,7 +203,7 @@ std::expected<pi::database_manager, pi::sqlite_error> initialize_database(std::f
             );
 
             RETURN_IF_UNEXPECTED(
-                db.prepare_statement("CREATE TABLE IF NOT EXISTS states (state BOOLEAN NOT NULL, date DATE NOT NULL, time TIME NOT NULL, duration INTEGER NOT NULL);")
+                db.prepare_statement("CREATE TABLE IF NOT EXISTS states (state BOOLEAN NOT NULL, timestamp INTEGER NOT NULL, duration INTEGER NOT NULL);")
                     .and_then([](pi::sqlite_statement statement) -> std::expected<void, pi::sqlite_error> {
                         RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement.execute(), {});
                     }
