@@ -1,4 +1,5 @@
 #include "database.hpp"
+#include "error.hpp"
 #include <cassert>
 #include <expected>
 #include <filesystem>
@@ -16,7 +17,7 @@ namespace pi
         const int result = ::sqlite3_open_v2(
             std::filesystem::absolute(path).c_str(),
             &obj,
-            std::to_underlying(mode),
+            std::to_underlying(mode) | SQLITE_OPEN_NOMUTEX,
             nullptr
         );
 
@@ -287,9 +288,31 @@ namespace pi
         return sqlite_connection::create(m_db_path, sqlite_access_mode::readwrite);
     }
 
-    void database_manager::insert_state(bool state, std::chrono::seconds seconds)
+    std::expected<void, sqlite_error> database_manager::insert_state(sqlite_connection& connection, bool state, std::chrono::seconds seconds)
     {
+        auto statement = connection
+            .prepare_statement("INSERT INTO States (state, date, time, duration) VALUES ( :state , DATE(), TIME(), :duration);");
 
+        if (!statement)
+            return std::unexpected{statement.error()};
+
+        RETURN_IF_UNEXPECTED(statement->bind_parameter("statement", state));
+        RETURN_IF_UNEXPECTED(statement->bind_parameter("duration", seconds.count()));
+
+        RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement->execute(), {});
+    }
+
+    std::expected<void, sqlite_error> database_manager::insert_temperature(sqlite_connection& connection, std::int32_t temperature)
+    {
+        auto statement = connection
+            .prepare_statement("INSERT INTO Temperatures (value, date, time) VALUES (:temperature, DATE(), TIME());");
+
+        if (!statement)
+            return std::unexpected{statement.error()};
+
+        RETURN_IF_UNEXPECTED(statement->bind_parameter("temperature", temperature));
+
+        RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement->execute(), {});
     }
 
     /**********
