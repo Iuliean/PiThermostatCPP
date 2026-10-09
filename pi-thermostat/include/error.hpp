@@ -30,19 +30,19 @@ namespace pi
     class error
     {
     public:
-        constexpr error(Kind kind, std::string message, std::source_location source = {}) noexcept
+        constexpr error(Kind kind, std::string message, std::source_location source = std::source_location::current()) noexcept
             : m_err_kind(kind),
               m_message(std::move(message)),
               m_source(std::move(source))
         { }
 
-        constexpr error(Kind kind, std::string_view message, std::source_location source = {})
+        constexpr error(Kind kind, std::string_view message, std::source_location source = std::source_location::current())
             : m_err_kind(kind),
               m_message(message),
               m_source(std::move(source))
         { }
 
-        constexpr error(Kind kind, const char* message, std::source_location source = {})
+        constexpr error(Kind kind, const char* message, std::source_location source = std::source_location::current())
             : error(kind, std::string_view(message), source)
         { }
 
@@ -57,7 +57,7 @@ namespace pi
 
         constexpr std::source_location source()const noexcept { return m_source; }
 
-        static std::unexpected<error<Kind>> make_error(Kind kind, auto&& message, std::source_location source = {}) noexcept
+        static std::unexpected<error<Kind>> make_error(Kind kind, auto&& message, std::source_location source = std::source_location::current()) noexcept
         {
             return std::unexpected<error<Kind>>{
                 std::in_place,
