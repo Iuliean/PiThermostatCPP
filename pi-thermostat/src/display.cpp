@@ -131,7 +131,8 @@ namespace pi
             }
             co_await async::sleep_for(1000ms / m_refresh_rate_hz.load());
         }
-        spdlog::debug("Dispaly loop exit.");
+
+        ::spdlog::debug("Display loop exit.");
         const bool prev_value = m_stop_flag.test_and_set();
         //if the flag was already true that is very dubious
         if (prev_value)
