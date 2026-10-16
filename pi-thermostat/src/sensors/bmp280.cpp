@@ -127,12 +127,10 @@ namespace pi
             .and_then([](std::byte id_byte) -> std::expected<void, bmp280_error> {
                 const auto id = std::to_integer<std::uint8_t>(id_byte); 
                 if (id != g_chip_id)
-                    return std::unexpected{
-                        bmp280_error{
+                    return bmp280_error::make_error(
                             bmp280_error_names::chip_error,
                             std::format("Invalid chip id: {}", id)
-                        }
-                    };
+                    );
                 return {};
             })
             .and_then([&bmp]() -> std::expected<bmp280, bmp280_error> {
@@ -145,6 +143,7 @@ namespace pi
             .and_then([&config](bmp280 sensor) -> std::expected<bmp280, bmp280_error>{
                 if (!config)
                     return sensor;
+
                 RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(
                     sensor.set_config(*config),
                     sensor
@@ -192,12 +191,10 @@ namespace pi
             .and_then([this, &temp_data](std::size_t bytes_read) -> std::expected<std::int32_t, bmp280_error> {
                 //the values are extended on 3 registers
                 if (bytes_read != 3)
-                    return std::unexpected{
-                        bmp280_error{
+                    return bmp280_error::make_error(
                             bmp280_error_names::protocol_error,
                             "Block read more or less bytes"
-                        }
-                    };
+                    );
 
                 return compensate_temperature(
                     (std::to_integer<std::int32_t>(temp_data[0])  << 12) |
@@ -220,12 +217,10 @@ namespace pi
             })
             .and_then([this, &temp_press_data](std::size_t bytes_read) -> std::expected<std::uint32_t, bmp280_error> {
                 if(bytes_read != 6)
-                    return std::unexpected{
-                        bmp280_error{
+                    return bmp280_error::make_error(
                             bmp280_error_names::protocol_error,
                             "Block read more or less bytes than requested"
-                        }
-                    };
+                    );
 
                 return compensate_pressure(
                     //press data
