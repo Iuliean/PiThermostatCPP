@@ -24,11 +24,10 @@ namespace i2c
         const auto result = fn(fd, command);
 
         if (result < 0)
-            return std::expected<T, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 ::strerror(-result)
-            };
+            );
 
         return std::expected<T, i2c_error>{
             std::in_place,
@@ -42,11 +41,10 @@ namespace i2c
         const auto result = fn(fd, command, value);
 
         if (result < 0)
-            return std::expected<void, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 ::strerror(-result)
-            };
+            );
 
         return {};
     }
@@ -56,11 +54,10 @@ namespace i2c
         const descriptor fd = ::open(std::filesystem::absolute(path).c_str(), O_RDWR);
 
         if ( fd < 0)
-            return std::expected<bus, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::bus_error,
                 ::strerror(errno)
-            };
+            );
 
         return std::expected<bus, i2c_error>{
             std::in_place,
@@ -94,11 +91,10 @@ namespace i2c
         const auto result = ::ioctl(m_bus_descriptor, I2C_SLAVE, address);
 
         if (result < 0)
-            return std::expected<void, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::bus_error,
                 ::strerror(errno)
-            };
+            );
 
         return {};
     }
@@ -124,12 +120,10 @@ namespace i2c
     std::expected<std::size_t, i2c_error> bus::read_block(std::uint8_t command, std::span<std::byte> data_block) const noexcept
     {
         if (data_block.size() > I2C_SMBUS_BLOCK_MAX)
-            return std::unexpected{
-                i2c_error{
+            return i2c_error::make_error(
                     i2c_error_names::generic_error,
                     std::format("Maximum size for requested blocks is {}", I2C_SMBUS_BLOCK_MAX)
-                }
-            };
+            );
 
         const auto result = ::i2c_smbus_read_i2c_block_data(
             m_bus_descriptor,
@@ -138,11 +132,10 @@ namespace i2c
             reinterpret_cast<__u8*>(data_block.data()));
 
         if (result < 0 )
-            return std::expected<std::size_t, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 ::strerror(-result)
-            };
+            );
 
         return std::expected<std::size_t, i2c_error>{
             std::in_place,
@@ -163,11 +156,10 @@ namespace i2c
     std::expected<void, i2c_error> bus::write(std::uint8_t command, std::span<const std::byte> data, bool partial) const noexcept
     {
         if (data.size() > I2C_SMBUS_BLOCK_MAX && !partial)
-            return std::expected<void, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 std::format("Buffer is bigger than max of {}", I2C_SMBUS_BLOCK_MAX)
-            };
+            );
 
         const auto result = ::i2c_smbus_write_block_data(
             m_bus_descriptor,
@@ -177,17 +169,15 @@ namespace i2c
         );
 
         if (result < 0)
-            return std::expected<void, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 ::strerror(-result)
-            };
+            );
         else if (partial && (data.size() != static_cast<std::size_t>(result)))
-            return std::expected<void, i2c_error>{
-                std::unexpect,
+            return i2c_error::make_error(
                 i2c_error_names::transfer_error,
                 std::format("Failed to send the entire buffer. Expected {} sent {}", data.size(), result)
-            };
+            );
 
         return {};
     }
