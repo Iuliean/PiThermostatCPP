@@ -11,7 +11,6 @@ set (HEADER_FILES
 
     include/utils.hpp
     include/error.hpp
-    include/events.hpp
     include/controller.hpp
     include/relay.hpp
     include/database.hpp
@@ -28,7 +27,6 @@ set(SOURCE_FILES
     src/async/sleep.cpp
 
     src/main.cpp
-    src/events.cpp
     src/controller.cpp
     src/relay.cpp
     src/database.cpp
