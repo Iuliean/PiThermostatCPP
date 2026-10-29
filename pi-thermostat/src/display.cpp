@@ -74,14 +74,14 @@ namespace pi
 
     display::~display()
     {
-        stop();
+        coro::sync_wait(stop());
     }
 
     coro::task<void> display::run()
     {
         using namespace std::chrono_literals;
 
-        while(!m_stop)
+        while(!m_stop.is_set())
         {
             std::size_t position_shift = 0;
 
@@ -133,11 +133,7 @@ namespace pi
         }
 
         ::spdlog::debug("Display loop exit.");
-        const bool prev_value = m_stop_flag.test_and_set();
-        //if the flag was already true that is very dubious
-        if (prev_value)
-            assert(true);
-        m_stop_flag.notify_all();
+        m_stop_flag.set();
     }
 
     void display::show(std::int32_t number)
@@ -151,10 +147,10 @@ namespace pi
         m_refresh_rate_hz = refresh_rate_hz;
     }
 
-    void display::stop()
+    coro::task<void> display::stop()
     {
-        m_stop = true;
-        m_stop_flag.wait(false);
+        m_stop.set();
+        co_await m_stop_flag;
     }
 
     /**********

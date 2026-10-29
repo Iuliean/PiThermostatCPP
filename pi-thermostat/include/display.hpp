@@ -24,13 +24,13 @@ namespace pi
 
         void show(std::int32_t number);
         void set_refresh_rate(std::size_t refresh_rate_hz);
-        void stop();
+        coro::task<void> stop();
     private:
 
         void clear_segements();
 
-        std::atomic_bool m_stop;
-        std::atomic_flag m_stop_flag;
+        coro::event m_stop;
+        coro::event m_stop_flag;
 
         std::flat_map<char, std::size_t> m_pin_map;
         std::array<std::size_t, 4> m_digit_pins;
