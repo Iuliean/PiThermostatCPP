@@ -1,13 +1,21 @@
+#include <atomic>
 #include <chrono>
+#include <csignal>
 #include <cstdio>
 #include <fstream>
 #include <expected>
 #include <gpiod.hpp>
+#include <iostream>
 #include <memory>
 #include <print>
+#include <queue>
 #include <string>
+#include <thread>
+#include <utility>
 
 #include "controller.hpp"
+#include "coro/event.hpp"
+#include "coro/latch.hpp"
 #include "coro/sync_wait.hpp"
 #include "coro/when_all.hpp"
 #include "display.hpp"
@@ -25,6 +33,7 @@
 #include "database.hpp"
 #include "coro/coro.hpp"
 #include "async/sleep.hpp"
+#include "web_server.hpp"
 
 struct config
 {
@@ -57,6 +66,7 @@ struct config
 
 };
 
+std::atomic_flag g_stop_flag;
 
 constexpr std::optional<spdlog::level::level_enum> string_to_log_level(std::string_view str) noexcept
 {
@@ -178,6 +188,19 @@ std::expected<config, std::string> load_config()
     return out;
 }
 
+extern "C" void signal_handler(int signal)
+{
+    switch(signal)
+    {
+        case SIGINT:
+        case SIGTERM:
+            g_stop_flag.test_and_set();
+            break;
+        default:
+            std::unreachable();
+    }
+}
+
 void init_logging(spdlog::level::level_enum level, const std::vector<spdlog::sink_ptr>& out_sinks)
 {
     auto logger = std::make_shared<spdlog::logger>(
@@ -214,10 +237,25 @@ std::expected<pi::database_manager, pi::sqlite_error> initialize_database(std::f
         .transform([&db_path]() -> pi::database_manager { return pi::database_manager{ std::move(db_path) }; });
 }
 
+coro::task<void> stop_watchdog(pi::display& display, pi::controller& controller, pi::web::web_server& server)
+{
+    using namespace std::chrono_literals;
+    while(true)
+    {
+        if (g_stop_flag.test())
+        {
+            server.stop();
+            co_await display.stop();
+            co_await controller.stop();
+            co_return;
+        }
+        co_await ::pi::async::sleep_for(1ms);
+    }
+    std::unreachable();
+}
+
 int main()
 {
-    using namespace std::chrono_literals; 
-
     const auto config = ::load_config();
     if (!config)
     {
@@ -263,7 +301,7 @@ int main()
         return 1;
     }
     ::spdlog::info("Initializing bmp280 sensor... Done");
-    
+
     gpiod::chip gpio_chip{config->gpio_chip_path};
 
     pi::display display{
@@ -288,6 +326,13 @@ int main()
     }
     ::spdlog::info("Initializing controller... Done");
 
-    coro::sync_wait(coro::when_all(display.run(), controller->run()));
+    pi::web::web_server server{"0.0.0.0", 8080, "password", &db_init.value(), &controller.value()};
+
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
+
+    server.run();
+    coro::sync_wait(coro::when_all(display.run(), controller->run(), stop_watchdog(display, *controller, server)));
+
     return 0;
 }

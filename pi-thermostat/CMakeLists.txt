@@ -7,12 +7,16 @@ set (HEADER_FILES
 
     include/async/sleep.hpp
 
+    include/middlewares/authorize.hpp
+
+    include/utils.hpp
     include/error.hpp
     include/events.hpp
     include/controller.hpp
     include/relay.hpp
     include/database.hpp
     include/display.hpp
+    include/web_server.hpp
 )
 
 set(SOURCE_FILES 
@@ -29,6 +33,7 @@ set(SOURCE_FILES
     src/relay.cpp
     src/database.cpp
     src/display.cpp
+    src/web_server.cpp
 )
 
 add_executable(pi-thermostat
