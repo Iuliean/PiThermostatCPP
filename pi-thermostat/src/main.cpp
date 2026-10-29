@@ -1,6 +1,7 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstdint>
 #include <cstdio>
 #include <fstream>
 #include <expected>
@@ -64,6 +65,13 @@ struct config
         pi::bmp280::spi_3wires spi_3wires;
     }temp_sensor;
 
+    struct
+    {
+        std::string address;
+        std::uint16_t port;
+        std::string password;
+    }server;
+
 };
 
 std::atomic_flag g_stop_flag;
@@ -85,6 +93,7 @@ std::expected<config, std::string> load_config()
 
     out.log_sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 
+    /* KINDA COOKED BUT WHATEVER */
     auto get_or = [](const nlohmann::json& json, const std::string& key, auto value)
     {
         try
@@ -181,6 +190,22 @@ std::expected<config, std::string> load_config()
         out.temp_sensor.standby_time = ::pi::bmp280::standby_time::ms_4000;
         out.temp_sensor.iir_coef = ::pi::bmp280::iir_filter_coef::x2;
         out.temp_sensor.spi_3wires = ::pi::bmp280::spi_3wires::disable;
+    }
+
+    /*------------------------------------------------------------------------------------*/
+    if (config.contains("server"))
+    {
+        auto server = config.at("server");
+
+        out.server.address = get_or(server, "address", std::string{"0.0.0.0"});
+        out.server.port = get_or(server, "port", std::uint16_t{80});
+        out.server.password = get_or(server, "password", std::string{"admin"});
+    }
+    else
+    {
+        out.server.address = "0.0.0.0";
+        out.server.port = 80;
+        out.server.password = "admin";
     }
 
     /*------------------------------------------------------------------------------------*/
@@ -326,7 +351,7 @@ int main()
     }
     ::spdlog::info("Initializing controller... Done");
 
-    pi::web::web_server server{"0.0.0.0", 8080, "password", &db_init.value(), &controller.value()};
+    pi::web::web_server server{ config->server.address, config->server.port, config->server.password, &db_init.value(), &controller.value() };
 
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
