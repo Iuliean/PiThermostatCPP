@@ -10,7 +10,7 @@
 
 #define RETURN_IF_UNEXPECTED(e) do { \
     auto res = e; \
-    if (!res) return res; }while(false) \
+    if (!res) return std::unexpected{std::move(res.error())}; }while(false) \
 
 #define RETURN_IF_EXPECTED(e) do { \
     auto res = e; \
