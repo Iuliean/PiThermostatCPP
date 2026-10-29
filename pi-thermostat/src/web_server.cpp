@@ -164,7 +164,7 @@ namespace pi::web
         return crow::response{ ::crow::OK, "application/json", db_query->dump(4) };
     }
 
-    crow::response web_server::get_state_history([[maybe_unused]]const crow::request& request)
+    crow::response web_server::get_state_history(const crow::request& request)
     {
         assert(m_controller);
         assert(m_db_manager);
