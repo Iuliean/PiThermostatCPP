@@ -100,7 +100,7 @@ function(setup_libcoro)
     set(LIBCORO_FEATURE_NETWORKING OFF)
 
     FetchContent_Declare(
-        libcoro
+        libcoro SYSTEM
         GIT_REPOSITORY https://github.com/jbaldwin/libcoro.git
         GIT_TAG        "v0.16.0"
     )
