@@ -4,11 +4,9 @@
 #include "i2c/i2c_bus.hpp"
 #include "i2c/i2c_device.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
-#include <print>
 #include <string_view>
 #include <utility>
 
