@@ -1,5 +1,7 @@
 #include "controller.hpp"
 
+#include "coro/invoke.hpp"
+#include "coro/sync_wait.hpp"
 #include "coro/task.hpp"
 #include "database.hpp"
 #include "async/sleep.hpp"
@@ -43,7 +45,10 @@ namespace pi
 
     controller::controller(database_manager& db_manager, sqlite_connection db_connection, relay relay, bmp280 temp_sensor, display& display)
     : m_parameters{},
+      m_params_mtx{},
       m_temp{0},
+      m_stop{},
+      m_stop_flag{},
       m_relay{std::move(relay)},
       m_temp_sensor{temp_sensor},
       m_db_connection{std::move(db_connection)},
@@ -53,7 +58,7 @@ namespace pi
         if (!std::filesystem::exists(g_persistence_file))
         {
             ::spdlog::info("No persistence file found. Using default values");
-            save_parameters_to_persistance();
+            save_parameters_to_persistance(m_parameters);
             return;
         }
 
@@ -71,7 +76,7 @@ namespace pi
 
     controller::~controller()
     {
-        stop();
+        coro::sync_wait(stop());
     }
 
     coro::task<void> controller::run()
@@ -113,9 +118,9 @@ namespace pi
             last_temp_save = now;
         };
 
-        while (!m_stop)
+        while (!m_stop.is_set())
         {
-            const parameters params = m_parameters;
+            const parameters params = co_await get_parameters();
             const auto temp = m_temp_sensor.get_temp();
 
             if (temp)
@@ -145,29 +150,33 @@ namespace pi
         }
 
         ::spdlog::debug("Controller loop exit.");
-        const bool prev_value = m_stop_flag.test_and_set();
-        //if the flag was already true that is very dubious
-        if (prev_value)
-            assert(true);
-        m_stop_flag.notify_all();
+        m_stop_flag.set();
     }
 
-    void controller::stop() noexcept
+    coro::task<void> controller::stop() noexcept
     {
-        m_stop = true;
-        m_stop_flag.wait(false);
+        m_stop.set();
+        co_await m_stop_flag;
     }
 
-    controller::parameters controller::get_parameters()const noexcept
+    coro::task<controller::parameters> controller::get_parameters()const noexcept
     {
-        return m_parameters;
+        auto l = co_await m_params_mtx.scoped_lock();
+        co_return m_parameters;
     }
 
-    void controller::set_parameters(controller::parameters value)
+    coro::task<void> controller::set_parameters(std::optional<std::int32_t> min_temp, std::optional<std::int32_t> max_temp, std::optional<std::int32_t> temp_offset)
     {
-        m_parameters = value;
-        //Might write in worng order but we will get there
-        save_parameters_to_persistance();
+        auto l = co_await m_params_mtx.scoped_lock();
+
+        if (min_temp)
+            m_parameters.min_temp = *min_temp;
+        if (max_temp)
+            m_parameters.max_temp = *max_temp;
+        if (temp_offset)
+            m_parameters.temp_offset = *temp_offset;
+
+        save_parameters_to_persistance(m_parameters);
     }
 
     std::int32_t controller::get_temp()const noexcept
@@ -179,15 +188,14 @@ namespace pi
     * PRIVATE *
     **********/
 
-    void controller::save_parameters_to_persistance()const
+    void controller::save_parameters_to_persistance(const parameters& params)const
     {
         std::ofstream out {std::filesystem::path{g_persistence_file}};
         nlohmann::json json;
-        const parameters out_params = m_parameters;
 
-        json["min_temp"] = out_params.min_temp;
-        json["max_temp"] = out_params.max_temp;
-        json["temp_offset"] = out_params.temp_offset;
+        json["min_temp"] = params.min_temp;
+        json["max_temp"] = params.max_temp;
+        json["temp_offset"] = params.temp_offset;
 
         out << json.dump(4);
     }
