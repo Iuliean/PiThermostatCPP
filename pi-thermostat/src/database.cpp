@@ -1,10 +1,14 @@
 #include "database.hpp"
 #include "display.hpp"
 #include "error.hpp"
+#include "nlohmann/detail/conversions/to_json.hpp"
+#include "utils.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <cassert>
 #include <expected>
 #include <filesystem>
 #include <sqlite3.h>
+#include <unordered_map>
 #include <utility>
 
 namespace pi
@@ -136,8 +140,8 @@ namespace pi
 
     std::expected<void, sqlite_error> sqlite_statement::bind_parameter(const char* name, std::int64_t value) noexcept
     {
-        const int result = ::sqlite3_bind_int(
-            m_statement, 
+        const int result = ::sqlite3_bind_int64(
+            m_statement,
             index_of(name),
             value
         );
@@ -190,7 +194,7 @@ namespace pi
     std::expected<std::optional<sqlite_statement::table_result>, sqlite_error> sqlite_statement::execute() noexcept
     {
         table_result out;
-        for (int result = ::sqlite3_step(m_statement); result != SQLITE_DONE; ::sqlite3_step(m_statement))
+        for (int result = ::sqlite3_step(m_statement); result != SQLITE_DONE; result = ::sqlite3_step(m_statement))
         {
             switch (result)
             {
@@ -302,6 +306,42 @@ namespace pi
         RETURN_IF_UNEXPECTED(statement->bind_parameter(":timestamp", timestamp));
 
         RETURN_VALUE_IF_EXPECTED_ELSE_FORWARD(statement->execute(), {});
+    }
+
+    std::expected<nlohmann::json, sqlite_error> database_manager::get_temperature(sqlite_connection& connection, std::int64_t start, std::int64_t end)
+    {
+        return connection
+            .prepare_statement("SELECT * FROM temperatures WHERE timestamp >= :start AND timestamp <= :end;")
+            .and_then([start, end](sqlite_statement statement) -> std::expected<std::optional<sqlite_statement::table_result>, sqlite_error> {
+                RETURN_IF_UNEXPECTED(statement.bind_parameter(":start", start));
+                RETURN_IF_UNEXPECTED(statement.bind_parameter(":end", end));
+                return statement.execute();
+            })
+            .transform([](std::optional<sqlite_statement::table_result> result){
+                return nlohmann::json{std::move(result)};
+            });
+
+    }
+
+    std::expected<nlohmann::json, sqlite_error> database_manager::get_state(sqlite_connection& connection, std::int64_t start, std::int64_t end, std::optional<bool> state)
+    {
+        std::string_view query =
+            state.has_value() ? "SELECT * FROM states WHERE timestamp >= :start AND timestamp <= :end AND state = :state;"
+            : "SELECT * FROM states WHERE timestamp >= :start AND timestamp <= :end;";
+
+        return connection
+            .prepare_statement(query)
+            .and_then([start, end, state](sqlite_statement statement) -> std::expected<std::optional<sqlite_statement::table_result>, sqlite_error> {
+                RETURN_IF_UNEXPECTED(statement.bind_parameter(":start", start));
+                RETURN_IF_UNEXPECTED(statement.bind_parameter(":end", end));
+                if (state)
+                    RETURN_IF_UNEXPECTED(statement.bind_parameter(":state", static_cast<int>(*state)));
+
+                return statement.execute();
+            })
+            ->transform([](std::optional<sqlite_statement::table_result> result) {
+                return nlohmann::json{std::move(result)};
+            });
     }
 
     /**********

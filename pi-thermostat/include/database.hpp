@@ -12,6 +12,7 @@
 
 #include "error.hpp"
 #include "sqlite3.h"
+#include "nlohmann/json.hpp"
 
 namespace pi
 {
@@ -129,9 +130,13 @@ namespace pi
         std::expected<void, sqlite_error> insert_state(sqlite_connection& connection, bool state, std::int64_t timestamp, std::chrono::seconds duration);
         std::expected<void, sqlite_error> insert_temperature(sqlite_connection& connection, std::int32_t temperature, std::int64_t timestamp);
 
+        std::expected<nlohmann::json, sqlite_error> get_temperature(sqlite_connection& connection, std::int64_t start, std::int64_t end);
+        std::expected<nlohmann::json, sqlite_error> get_state(sqlite_connection& connection, std::int64_t start, std::int64_t end, std::optional<bool> state = {});
+
     private:
         std::filesystem::path m_db_path;
     };
+
 }
 
 #endif //DATABASE_HPP
