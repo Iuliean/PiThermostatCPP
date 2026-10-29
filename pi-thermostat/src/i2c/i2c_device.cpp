@@ -9,6 +9,8 @@ namespace i2c
           m_address(address)
     { }
 
+    device::~device() { }
+
     std::expected<std::byte, i2c_error> device::read_byte(std::uint8_t command) const noexcept
         {
             return select_this_device()

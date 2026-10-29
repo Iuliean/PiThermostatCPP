@@ -8,7 +8,7 @@ namespace i2c
     {
     public:
         device(const bus& bus, address address) noexcept;
-        ~device() = default;
+        ~device();
 
 
         std::expected<std::byte, i2c_error> read_byte(std::uint8_t command) const noexcept;
