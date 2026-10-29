@@ -1,8 +1,5 @@
 #include "async/sleep.hpp"
 
-#include "spdlog/spdlog.h"
-
-
 namespace pi::async
 {
     /**********
@@ -13,7 +10,7 @@ namespace pi::async
         : m_event(event),
           m_timer_id(timer_id)
     { }
-    
+
     sleep_timer::~sleep_timer()
     {
         timer_delete(m_timer_id);

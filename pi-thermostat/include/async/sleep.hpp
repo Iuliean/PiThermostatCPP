@@ -77,10 +77,10 @@ namespace pi::async
 
         sleep_timer(const sleep_timer&) = delete;
         sleep_timer& operator=(const sleep_timer&) = delete;
-        
+
         sleep_timer(sleep_timer&&) = delete;
         sleep_timer& operator=(sleep_timer&&) = delete;
-    
+
         ~sleep_timer();
 
         coro::event::awaiter operator co_await() { return coro::event::awaiter(*m_event); }
